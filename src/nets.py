@@ -11,6 +11,7 @@ class DefaultGen(nn.Module):
     def forward(self, noise, label):
         pass
 
+
 class DefaultDis(nn.Module):
     def __init__(self, parameters):
         super().__init__()

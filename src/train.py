@@ -21,8 +21,6 @@ def test(model, data_loader):
 
 def main():
     # read config file
-    config = read_config(sys.argv)
-
     (
         batch_size,
         test_batch_size,
@@ -31,7 +29,7 @@ def main():
         gamma,
         cuda,
         seed,
-    ) = list(config["training"].values())
+    ) = read_config(sys.argv)
 
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -57,11 +55,30 @@ def read_config(_input):
         print("Train model using %s as configuration file." % (_input[1]))
         path_config = working_dir / Path("{}".format(_input[1]))
 
+    if path_config.suffix != ".yaml":
+        print("Make sure that the configuration file is a .yaml file.")
+        sys.exit(1)
+
     try:
         with open(path_config) as yamlfile:
             config = yaml.load(yamlfile, Loader=yaml.FullLoader)
     except OSError as e:
         print("Configuration file not available, check under configs/ directory.")
+        print(e)
+        sys.exit(1)
+
+    try:
+        config = (
+            batch_size,
+            test_batch_size,
+            epochs,
+            lr,
+            gamma,
+            cuda,
+            seed,
+        ) = list(config["training"].values())
+    except (ValueError, KeyError) as e:
+        print("The given .yaml file uses a wrong convention.")
         print(e)
         sys.exit(1)
 

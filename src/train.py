@@ -77,7 +77,14 @@ def read_config(_input):
             cuda,
             seed,
         ) = list(config["training"].values())
-    except (ValueError, KeyError) as e:
+        assert type(batch_size) == int
+        assert type(test_batch_size) == int
+        assert type(epochs) == int
+        assert type(lr) == float
+        assert type(gamma) == float
+        assert type(cuda) == bool
+        assert type(seed) == int
+    except (AssertionError, ValueError, KeyError) as e:
         print("The given .yaml file uses a wrong convention.")
         print(e)
         sys.exit(1)

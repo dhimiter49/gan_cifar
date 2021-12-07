@@ -86,6 +86,17 @@ def read_config(_input):
         assert type(seed) == int
     except (AssertionError, ValueError, KeyError) as e:
         print("The given .yaml file uses a wrong convention.")
+        print(
+            "The expected format for the .yaml file is:\n"
+            "training:\n"
+            "    batch_size: int\n"
+            "    test_batch_size: int\n"
+            "    epochs: int\n"
+            "    lr: float\n"
+            "    gamma: float\n"
+            "    cuda: bool\n"
+            "    seed: int"
+        )
         print(e)
         sys.exit(1)
 

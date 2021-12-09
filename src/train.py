@@ -7,11 +7,14 @@ import nets
 
 # specify absolute path
 
+
 def train(model, data_loader, optimizer, loss_function):
     pass
 
+
 def test(model, data_loader):
     pass
+
 
 def main():
     # read config file
@@ -23,6 +26,6 @@ def main():
     # plot stuff
     pass
 
+
 if __name__ == "__main__":
     main()
-

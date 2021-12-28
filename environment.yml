@@ -98,6 +98,7 @@ dependencies:
     - tensorboard-data-server==0.6.1
     - tensorboard-plugin-wit==1.8.0
     - tomli==1.2.2
+    - tqdm==4.62.3
     - urllib3==1.26.7
     - werkzeug==2.0.2
     - zipp==3.6.0

@@ -15,6 +15,7 @@ experiments_dir = Path()  # set this paths after reading the config file
 models_dir = Path()
 
 
+
 def train(model, data_loader, optimizer, loss_function):
     pass
 
@@ -51,7 +52,7 @@ def main():
     # plot stuff
     pass
 
-
+  
 def read_config(_input):
     if len(_input) == 1:
         print(

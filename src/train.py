@@ -57,7 +57,7 @@ def train_gen(gen_model, disc_model, latents, device, optimizer, loss_function):
         loss.backward()
         optimize.step()
 
-        # Logging
+        # Logging 
         predictions = (predictions >= 0.5)
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
@@ -126,8 +126,29 @@ def main():
     torch.manual_seed(seed)
     device = torch.device("cuda" if (cuda and torch.cuda.is_available()) else "cpu")
 
-    # load dataset
-    # instantiate dataloader
+    # PyTorch transforms
+    transform = transforms.Compose([transforms.Resize((32)),
+                                transforms.ToTensor(),
+                                transforms.Normalize((0.5,), (0.5,))])
+
+    # Read CIFAR10 data and apply transformation
+    cifar10_dataset = torchvision.datasets.CIFAR10(
+        root="./dataset",
+        train=True,
+        download=True,
+        transform=transform
+    )
+    cifar10_dataset_test = torchvision.datasets.CIFAR10(
+        root="./dataset",
+        train=False,
+        download=True,
+        transform=transform
+    )
+
+    data_loader = torch.utils.data.DataLoader(cifar10_dataset, batch_size=1, shuffle=True, num_workers=1)
+    data_loader_test = torch.utils.data.DataLoader(cifar10_dataset_test, batch_size=1, shuffle=False, num_workers=1)
+    
+    
     # instantiate network, optimizer, loss...
     # main loop, calls train and test
     # log results

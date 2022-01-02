@@ -8,5 +8,5 @@ training:
     seed: 0
 
     # Losses: BCELoss, ExpSigmaLoss
-    gen_loss: ExpSigmaLoss
-    disc_loss: ExpSigmaLoss
+    gen_loss: BCELoss
+    disc_loss: BCELoss

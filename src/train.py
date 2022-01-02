@@ -60,7 +60,7 @@ def train_gen(gen_model, disc_model, latents, device, optimizer, loss_function):
         loss.backward()
         optimize.step()
 
-        # Logging 
+        # Logging
         predictions = (predictions >= 0.5)
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
@@ -119,6 +119,8 @@ def main():
         gamma,
         cuda,
         seed,
+        gen_loss_str,
+        disc_loss_str,
     ) = read_config(sys.argv)
 
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
@@ -150,15 +152,17 @@ def main():
 
     data_loader = torch.utils.data.DataLoader(cifar10_dataset, batch_size=1, shuffle=True, num_workers=1)
     data_loader_test = torch.utils.data.DataLoader(cifar10_dataset_test, batch_size=1, shuffle=False, num_workers=1)
-    
-    
+
+    gen_loss = getattr(losses, gen_loss_str)()
+    disc_loss = getattr(losses, disc_loss_str)()
+
     # instantiate network, optimizer, loss...
     # main loop, calls train and test
     # log results
     # plot stuff
     pass
 
-  
+
 def read_config(_input):
     if len(_input) == 1:
         print(
@@ -195,6 +199,8 @@ def read_config(_input):
             gamma,
             cuda,
             seed,
+            gen_loss,
+            disc_loss,
         ) = list(config["training"].values())
         assert type(batch_size) == int
         assert type(test_batch_size) == int
@@ -203,6 +209,8 @@ def read_config(_input):
         assert type(gamma) == float
         assert type(cuda) == bool
         assert type(seed) == int
+        assert type(gen_loss) == str
+        assert type(disc_loss) == str
     except (AssertionError, ValueError, KeyError) as e:
         print("The given .yaml file uses a wrong convention.")
         print(
@@ -215,6 +223,8 @@ def read_config(_input):
             "    gamma: float\n"
             "    cuda: bool\n"
             "    seed: int"
+            "    gen_loss: str"
+            "    disc_loss: str"
         )
         print(e)
         sys.exit(1)

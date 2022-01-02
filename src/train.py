@@ -19,7 +19,6 @@ experiments_dir = Path()  # set this paths after reading the config file
 models_dir = Path()
 
 
-
 def train_dis(model, data_loader, device, optimizer, loss_function):
     model.train()
     train_loss = 0.0
@@ -36,7 +35,7 @@ def train_dis(model, data_loader, device, optimizer, loss_function):
         optimize.step()
 
         # Logging
-        predictions = (predictions >= 0.5)
+        predictions = predictions >= 0.5
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
 
@@ -61,7 +60,7 @@ def train_gen(gen_model, disc_model, latents, device, optimizer, loss_function):
         optimize.step()
 
         # Logging
-        predictions = (predictions >= 0.5)
+        predictions = predictions >= 0.5
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
 
@@ -75,13 +74,12 @@ def test_dis(model, data_loader, device, loss):
     for (data, target) in tqdm(data_loader):
         data, target = data.to(device), target.to(device)
 
-
         predictions = model(data)
         loss = loss_function(predictions, target)
         test_loss += loss.detach().item()
 
         # Logging
-        predictions = (predictions >= 0.5)
+        predictions = predictions >= 0.5
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
 
@@ -102,7 +100,7 @@ def test_gen(model, disc_moedl, latents, device, loss_function):
         test_loss += loss.detach().item()
 
         # Logging
-        predictions = (predictions >= 0.5)
+        predictions = predictions >= 0.5
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
 
@@ -125,33 +123,35 @@ def main():
 
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
     Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
-    open(models_dir, 'w+')
+    open(models_dir, "w+")
 
     np.random.seed(seed)
     torch.manual_seed(seed)
     device = torch.device("cuda" if (cuda and torch.cuda.is_available()) else "cpu")
 
     # PyTorch transforms
-    transform = transforms.Compose([transforms.Resize((32)),
-                                transforms.ToTensor(),
-                                transforms.Normalize((0.5,), (0.5,))])
+    transform = transforms.Compose(
+        [
+            transforms.Resize((32)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,)),
+        ]
+    )
 
     # Read CIFAR10 data and apply transformation
     cifar10_dataset = torchvision.datasets.CIFAR10(
-        root="./dataset",
-        train=True,
-        download=True,
-        transform=transform
+        root="./dataset", train=True, download=True, transform=transform
     )
     cifar10_dataset_test = torchvision.datasets.CIFAR10(
-        root="./dataset",
-        train=False,
-        download=True,
-        transform=transform
+        root="./dataset", train=False, download=True, transform=transform
     )
 
-    data_loader = torch.utils.data.DataLoader(cifar10_dataset, batch_size=1, shuffle=True, num_workers=1)
-    data_loader_test = torch.utils.data.DataLoader(cifar10_dataset_test, batch_size=1, shuffle=False, num_workers=1)
+    data_loader = torch.utils.data.DataLoader(
+        cifar10_dataset, batch_size=1, shuffle=True, num_workers=1
+    )
+    data_loader_test = torch.utils.data.DataLoader(
+        cifar10_dataset_test, batch_size=1, shuffle=False, num_workers=1
+    )
 
     gen_loss = getattr(losses, gen_loss_str)()
     disc_loss = getattr(losses, disc_loss_str)()
@@ -175,8 +175,12 @@ def read_config(_input):
         path_config = working_dir / Path("{}".format(_input[1]))
 
     global experiments_dir, models_dir
-    experiments_dir = working_dir / Path("experiments/" + path_config.stem) / Path(unique_key)
-    models_dir = working_dir / Path("models/" + path_config.stem) / Path(unique_key + ".pt")
+    experiments_dir = (
+        working_dir / Path("experiments/" + path_config.stem) / Path(unique_key)
+    )
+    models_dir = (
+        working_dir / Path("models/" + path_config.stem) / Path(unique_key + ".pt")
+    )
 
     if path_config.suffix != ".yaml":
         print("Make sure that the configuration file is a .yaml file.")

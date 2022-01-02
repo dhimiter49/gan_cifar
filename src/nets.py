@@ -32,7 +32,6 @@ class DefaultGen(nn.Module):
         return self.model(input)
 
 
-
 class DefaultDis(nn.Module):
     def __init__(self):
         super().__init__()

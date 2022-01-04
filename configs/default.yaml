@@ -6,3 +6,7 @@ training:
     gamma: 0.5
     cuda: True # disable cuda if needed
     seed: 0
+
+    # Losses: BCELoss, ExpSigmaLoss
+    gen_loss: BCELoss
+    disc_loss: BCELoss

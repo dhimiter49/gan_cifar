@@ -5,16 +5,18 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
+import torchvision
+import torchvision.transforms as transforms
 import tqdm
 
 import yaml
 import nets
+import losses
 
 working_dir = Path(__file__).parent.parent.absolute()
 unique_key = str(str(time.ctime())).replace(" ", "_")
 experiments_dir = Path()  # set this paths after reading the config file
 models_dir = Path()
-
 
 
 def train_dis(model, data_loader, device, optimizer, loss_function):
@@ -33,7 +35,7 @@ def train_dis(model, data_loader, device, optimizer, loss_function):
         optimize.step()
 
         # Logging
-        predictions = (predictions >= 0.5)
+        predictions = predictions >= 0.5
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
 
@@ -57,8 +59,8 @@ def train_gen(gen_model, disc_model, latents, device, optimizer, loss_function):
         loss.backward()
         optimize.step()
 
-        # Logging 
-        predictions = (predictions >= 0.5)
+        # Logging
+        predictions = predictions >= 0.5
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
 
@@ -72,13 +74,12 @@ def test_dis(model, data_loader, device, loss):
     for (data, target) in tqdm(data_loader):
         data, target = data.to(device), target.to(device)
 
-
         predictions = model(data)
         loss = loss_function(predictions, target)
         test_loss += loss.detach().item()
 
         # Logging
-        predictions = (predictions >= 0.5)
+        predictions = predictions >= 0.5
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
 
@@ -99,7 +100,7 @@ def test_gen(model, disc_moedl, latents, device, loss_function):
         test_loss += loss.detach().item()
 
         # Logging
-        predictions = (predictions >= 0.5)
+        predictions = predictions >= 0.5
         batch_correct_pred = predictions.eq(target).sum().item()
         correct_pred += batch_correct_pred
 
@@ -116,46 +117,52 @@ def main():
         gamma,
         cuda,
         seed,
+        gen_loss_str,
+        disc_loss_str,
     ) = read_config(sys.argv)
 
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
     Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
-    open(models_dir, 'w+')
+    open(models_dir, "w+")
 
     np.random.seed(seed)
     torch.manual_seed(seed)
     device = torch.device("cuda" if (cuda and torch.cuda.is_available()) else "cpu")
 
     # PyTorch transforms
-    transform = transforms.Compose([transforms.Resize((32)),
-                                transforms.ToTensor(),
-                                transforms.Normalize((0.5,), (0.5,))])
+    transform = transforms.Compose(
+        [
+            transforms.Resize((32)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,)),
+        ]
+    )
 
     # Read CIFAR10 data and apply transformation
     cifar10_dataset = torchvision.datasets.CIFAR10(
-        root="./dataset",
-        train=True,
-        download=True,
-        transform=transform
+        root="./dataset", train=True, download=True, transform=transform
     )
     cifar10_dataset_test = torchvision.datasets.CIFAR10(
-        root="./dataset",
-        train=False,
-        download=True,
-        transform=transform
+        root="./dataset", train=False, download=True, transform=transform
     )
 
-    data_loader = torch.utils.data.DataLoader(cifar10_dataset, batch_size=1, shuffle=True, num_workers=1)
-    data_loader_test = torch.utils.data.DataLoader(cifar10_dataset_test, batch_size=1, shuffle=False, num_workers=1)
-    
-    
+    data_loader = torch.utils.data.DataLoader(
+        cifar10_dataset, batch_size=1, shuffle=True, num_workers=1
+    )
+    data_loader_test = torch.utils.data.DataLoader(
+        cifar10_dataset_test, batch_size=1, shuffle=False, num_workers=1
+    )
+
+    gen_loss = getattr(losses, gen_loss_str)()
+    disc_loss = getattr(losses, disc_loss_str)()
+
     # instantiate network, optimizer, loss...
     # main loop, calls train and test
     # log results
     # plot stuff
     pass
 
-  
+
 def read_config(_input):
     if len(_input) == 1:
         print(
@@ -168,8 +175,12 @@ def read_config(_input):
         path_config = working_dir / Path("{}".format(_input[1]))
 
     global experiments_dir, models_dir
-    experiments_dir = working_dir / Path("experiments/" + path_config.stem) / Path(unique_key)
-    models_dir = working_dir / Path("models/" + path_config.stem) / Path(unique_key + ".pt")
+    experiments_dir = (
+        working_dir / Path("experiments/" + path_config.stem) / Path(unique_key)
+    )
+    models_dir = (
+        working_dir / Path("models/" + path_config.stem) / Path(unique_key + ".pt")
+    )
 
     if path_config.suffix != ".yaml":
         print("Make sure that the configuration file is a .yaml file.")
@@ -192,6 +203,8 @@ def read_config(_input):
             gamma,
             cuda,
             seed,
+            gen_loss,
+            disc_loss,
         ) = list(config["training"].values())
         assert type(batch_size) == int
         assert type(test_batch_size) == int
@@ -200,6 +213,8 @@ def read_config(_input):
         assert type(gamma) == float
         assert type(cuda) == bool
         assert type(seed) == int
+        assert type(gen_loss) == str
+        assert type(disc_loss) == str
     except (AssertionError, ValueError, KeyError) as e:
         print("The given .yaml file uses a wrong convention.")
         print(
@@ -212,6 +227,8 @@ def read_config(_input):
             "    gamma: float\n"
             "    cuda: bool\n"
             "    seed: int"
+            "    gen_loss: str"
+            "    disc_loss: str"
         )
         print(e)
         sys.exit(1)

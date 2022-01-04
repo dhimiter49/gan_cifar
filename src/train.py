@@ -13,6 +13,11 @@ import yaml
 import nets
 import losses
 
+from torch.autograd import Variable
+
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 working_dir = Path(__file__).parent.parent.absolute()
 unique_key = str(str(time.ctime())).replace(" ", "_")
 experiments_dir = Path()  # set this paths after reading the config file
@@ -121,9 +126,9 @@ def main():
         disc_loss_str,
     ) = read_config(sys.argv)
 
-    Path(experiments_dir).mkdir(parents=True, exist_ok=True)
-    Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
-    open(models_dir, "w+")
+    # Path(experiments_dir).mkdir(parents=True, exist_ok=True)
+    # Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
+    # open(models_dir, "w+")
 
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -146,6 +151,7 @@ def main():
         root="./dataset", train=False, download=True, transform=transform
     )
 
+
     data_loader = torch.utils.data.DataLoader(
         cifar10_dataset, batch_size=1, shuffle=True, num_workers=1
     )
@@ -155,6 +161,29 @@ def main():
 
     gen_loss = getattr(losses, gen_loss_str)()
     disc_loss = getattr(losses, disc_loss_str)()
+
+    generator = DefaultGen()
+    discriminator = DefaultDis()
+
+    # Optimizer for the generator
+    optimizer_generator = torch.optim.Adam(generator.parameters(), lr=0.001, betas=(0.9, 0.999))
+
+    # Optimizer for the discriminator
+    optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=0.0001, betas=(0.5, 0.999), weight_decay=0.005)
+
+    for epoch in range(epochs):
+        # Create valid and fake labels as targets
+        valid = Variable(torch.FloatTensor(len(data_loader), 1).fill_(1.0), requires_grad=False) #real
+        fake = Variable(torch.FloatTensor(len(data_loader), 1).fill_(0.0), requires_grad=False) #fake
+
+        real_imgs = Variable(data.type(torch.FloatTensor))
+
+        # Create a random (sample from normal distribution) matrix as an input for the generator
+        z = Variable(torch.FloatTensor(np.random.normal(0, 1, (len(data_loader), 128, 4, 4))))
+
+        data_loader_z = torch.utils.data.DataLoader(
+            z, batch_size=1, shuffle=True, num_workers=1)
+
 
     # instantiate network, optimizer, loss...
     # main loop, calls train and test

@@ -105,8 +105,8 @@ def main():
         for batch_idx, (data, labels) in enumerate(tqdm(data_loader)):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
-            real_targets = torch.ones(mini_batch_size)
-            fake_targets = torch.zeros(mini_batch_size)
+            real_targets = torch.ones(mini_batch_size).to(device)
+            fake_targets = torch.zeros(mini_batch_size).to(device)
 
             for _ in range(disc_iterations):
                 noise = torch.randn(mini_batch_size, latent_dim, 4, 4).to(device)

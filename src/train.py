@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
-import tqdm
+from tqdm import tqdm 
 from torch.utils.tensorboard import SummaryWriter
 
 import yaml
@@ -92,8 +92,29 @@ def main():
     # Optimizer for the discriminator
     optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.005)
 
-    
-    pass
+    for epoch in range(tqdm(num_epochs)):
+        for batch_idx, (data, labels) in enumerate(tqdm(data_loader)):
+            data, labels = data.to(device), labels.to(device)
+            mini_batch_size = data.shape[0]
+            real_targets = torch.ones(mini_batch_size)
+            fake_targets = torch.zeros(mini_batch_size)
+
+            for _ in range(disc_iterations):
+                noise = torch.randn(mini_batch_size, z_dim, 4, 4).to(device)
+                fake = generator(noise, labels)
+                predicition_real = discriminator(data, labels).reshape(-1)
+                predicition_fake = discriminator(fake, labels).reshape(-1)
+                loss_real = disc_loss(predicition_real, real_targets)
+                loss_fake = disc_loss(predicition_fake, fake_targets)
+                discriminator.zero_grad()
+                loss_discriminator.backward(retain_graph=True)
+                optimizer_discriminator.step()
+
+        predicition_fake = discriminator(fake, labels).reshape(-1)
+        loss_generator = gen_loss(predicition_fake, real_targets)
+        generator.zero_grad()
+        loss_generator.backward()
+        optimizer_generator.step()
 
 
 def read_config(_input):

@@ -17,6 +17,7 @@ import losses
 from torch.autograd import Variable
 
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 working_dir = Path(__file__).parent.parent.absolute()
@@ -56,12 +57,13 @@ def main():
 
     # PyTorch transforms
     trans = transforms.Compose(
-    [
-        transforms.Resize(img_size),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            [0.5 for _ in range(channels_img)], [0.5 for _ in range(channels_img)]),
-    ]
+        [
+            transforms.Resize(img_size),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                [0.5 for _ in range(channels_img)], [0.5 for _ in range(channels_img)]
+            ),
+        ]
     )
 
     # Read CIFAR10 data and apply transformation
@@ -71,7 +73,6 @@ def main():
     cifar10_dataset_test = torchvision.datasets.CIFAR10(
         root="./dataset", train=False, download=True, transform=trans
     )
-
 
     data_loader = torch.utils.data.DataLoader(
         cifar10_dataset, batch_size=batch_size, shuffle=True, num_workers=1
@@ -83,16 +84,22 @@ def main():
     gen_loss = getattr(losses, gen_loss_str)()
     disc_loss = getattr(losses, disc_loss_str)()
 
-    generator = Generator(latent_dim, channels_img, gen_features, num_classes, img_size, embedding_dim).to(device)
-    discriminator = Discriminator(channels_img, disc_features, num_classes, img_size).to(device)
+    generator = Generator(
+        latent_dim, channels_img, gen_features, num_classes, img_size, embedding_dim
+    ).to(device)
+    discriminator = Discriminator(
+        channels_img, disc_features, num_classes, img_size
+    ).to(device)
 
     # for tensorboard plotting
-    writer_real = SummaryWriter(experiments_dir/Path("real"))
-    writer_fake = SummaryWriter(experiments_dir/Path("fake"))
+    writer_real = SummaryWriter(experiments_dir / Path("real"))
+    writer_fake = SummaryWriter(experiments_dir / Path("fake"))
     step = 0
 
     gen_optimizer = torch.optim.Adam(generator.parameters(), lr=lr, betas=(0.9, 0.999))
-    disc_optimizer = torch.optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.005)
+    disc_optimizer = torch.optim.Adam(
+        discriminator.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.005
+    )
 
     for epoch in tqdm(range(epochs)):
         for batch_idx, (data, labels) in enumerate(tqdm(data_loader)):

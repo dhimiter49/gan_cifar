@@ -1,3 +1,14 @@
+dataset:
+    img_size: 32
+    channels_img: 3
+    num_classes: 10
+
+nets:
+    disc_features: 16
+    gen_features: 16
+    latent_dim: 128
+    embedding_dim: 128
+
 training:
     batch_size: 1000
     test_batch_size: 1000
@@ -6,7 +17,8 @@ training:
     gamma: 0.5
     cuda: True # disable cuda if needed
     seed: 0
+    disc_iterations: 1
 
-    # Losses: BCELoss, ExpSigmaLoss
+    # Losses: BCELoss, ExpSigmaLoss, WassersteinLoss
     gen_loss: BCELoss
     disc_loss: BCELoss

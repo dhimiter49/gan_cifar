@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
-from tqdm import tqdm 
+from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 import yaml
@@ -149,7 +149,20 @@ def read_config(_input):
         sys.exit(1)
 
     try:
-        config = (
+        config_dataset = (
+            img_size,
+            channels_img,
+            num_classes,
+        ) = list(config["dataset"].values())
+
+        config_model = (
+            disc_features,
+            gen_features,
+            latent_dim,
+            embedding_dim,
+        ) = list(config["nets"].values())
+
+        config_training = (
             batch_size,
             test_batch_size,
             epochs,
@@ -157,9 +170,18 @@ def read_config(_input):
             gamma,
             cuda,
             seed,
+            disc_iterations,
             gen_loss,
             disc_loss,
         ) = list(config["training"].values())
+
+        assert type(img_size) == int
+        assert type(channels_img) == int
+        assert type(num_classes) == int
+        assert type(disc_features) == int
+        assert type(gen_features) == int
+        assert type(latent_dim) == int
+        assert type(embedding_dim) == int
         assert type(batch_size) == int
         assert type(test_batch_size) == int
         assert type(epochs) == int
@@ -173,6 +195,15 @@ def read_config(_input):
         print("The given .yaml file uses a wrong convention.")
         print(
             "The expected format for the .yaml file is:\n"
+            "dataset:\n"
+            "    img_size: int\n"
+            "    channels_img: int\n"
+            "    num_classes: int\n"
+            "nets:\n"
+            "    disc_features: int\n"
+            "    gen_features: int\n"
+            "    latent_dims: int\n"
+            "    embedding_dim: int\n"
             "training:\n"
             "    batch_size: int\n"
             "    test_batch_size: int\n"
@@ -187,7 +218,7 @@ def read_config(_input):
         print(e)
         sys.exit(1)
 
-    return config
+    return config_dataset + config_model + config_training
 
 
 if __name__ == "__main__":

@@ -7,11 +7,17 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
-import tqdm
+from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
 
 import yaml
-import nets
+from nets import Discriminator, Generator
 import losses
+
+from torch.autograd import Variable
+
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 working_dir = Path(__file__).parent.parent.absolute()
 unique_key = str(str(time.ctime())).replace(" ", "_")
@@ -19,97 +25,15 @@ experiments_dir = Path()  # set this paths after reading the config file
 models_dir = Path()
 
 
-def train_dis(model, data_loader, device, optimizer, loss_function):
-    model.train()
-    train_loss = 0.0
-    correct_pred = 0.0
-    for (data, target) in tqdm(data_loader):
-        data, target = data.to(device), target.to(device)
-
-        optimizer.zero_grad()
-
-        predictions = model(data)
-        loss = loss_function(predictions, target)
-        train_loss += loss.detach().item()
-        loss.backward()
-        optimize.step()
-
-        # Logging
-        predictions = predictions >= 0.5
-        batch_correct_pred = predictions.eq(target).sum().item()
-        correct_pred += batch_correct_pred
-
-    return train_loss, correct_pred / len(data_loader.dataset)
-
-
-def train_gen(gen_model, disc_model, latents, device, optimizer, loss_function):
-    gen_model.train()
-    disc_model.eval()
-    train_loss = 0.0
-    correct_pred = 0.0
-    for data in tqdm(latents):
-        data = data.to(device)
-
-        optimizer.zero_grad()
-
-        output = model(data)
-        predictions = disc_model(ouput)
-        loss = loss_function(predictions)
-        train_loss += loss.detach().item()
-        loss.backward()
-        optimize.step()
-
-        # Logging
-        predictions = predictions >= 0.5
-        batch_correct_pred = predictions.eq(target).sum().item()
-        correct_pred += batch_correct_pred
-
-    return train_loss, 1 - correct_pred / len(latents.flatten())
-
-
-def test_dis(model, data_loader, device, loss):
-    model.eval()
-    test_loss = 0.0
-    correct_pred = 0.0
-    for (data, target) in tqdm(data_loader):
-        data, target = data.to(device), target.to(device)
-
-        predictions = model(data)
-        loss = loss_function(predictions, target)
-        test_loss += loss.detach().item()
-
-        # Logging
-        predictions = predictions >= 0.5
-        batch_correct_pred = predictions.eq(target).sum().item()
-        correct_pred += batch_correct_pred
-
-    return test_loss, correct_pred / len(data_loader.dataset)
-
-
-def test_gen(model, disc_moedl, latents, device, loss_function):
-    model.eval()
-    disc_model.eval()
-    test_loss = 0.0
-    correct_pred = 0.0
-    for data in tqdm(latents):
-        data = data.to(device)
-
-        output = model(data)
-        predictions = disc_model(ouput)
-        loss = loss_function(predictions)
-        test_loss += loss.detach().item()
-
-        # Logging
-        predictions = predictions >= 0.5
-        batch_correct_pred = predictions.eq(target).sum().item()
-        correct_pred += batch_correct_pred
-
-    return test_loss, 1 - correct_pred / len(latents.flatten())
-
-
 def main():
-    # read config file
     (
+        img_size,
+        channels_img,
+        num_classes,
+        disc_features,
+        gen_features,
+        latent_dim,
+        embedding_dim,
         batch_size,
         test_batch_size,
         epochs,
@@ -117,6 +41,7 @@ def main():
         gamma,
         cuda,
         seed,
+        disc_iterations,
         gen_loss_str,
         disc_loss_str,
     ) = read_config(sys.argv)
@@ -130,37 +55,69 @@ def main():
     device = torch.device("cuda" if (cuda and torch.cuda.is_available()) else "cpu")
 
     # PyTorch transforms
-    transform = transforms.Compose(
-        [
-            transforms.Resize((32)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5,), (0.5,)),
-        ]
+    trans = transforms.Compose(
+    [
+        transforms.Resize(img_size),
+        transforms.ToTensor(),
+        transforms.Normalize(
+            [0.5 for _ in range(channels_img)], [0.5 for _ in range(channels_img)]),
+    ]
     )
 
     # Read CIFAR10 data and apply transformation
     cifar10_dataset = torchvision.datasets.CIFAR10(
-        root="./dataset", train=True, download=True, transform=transform
+        root="./dataset", train=True, download=True, transform=trans
     )
     cifar10_dataset_test = torchvision.datasets.CIFAR10(
-        root="./dataset", train=False, download=True, transform=transform
+        root="./dataset", train=False, download=True, transform=trans
     )
 
+
     data_loader = torch.utils.data.DataLoader(
-        cifar10_dataset, batch_size=1, shuffle=True, num_workers=1
+        cifar10_dataset, batch_size=batch_size, shuffle=True, num_workers=1
     )
     data_loader_test = torch.utils.data.DataLoader(
-        cifar10_dataset_test, batch_size=1, shuffle=False, num_workers=1
+        cifar10_dataset_test, batch_size=test_batch_size, shuffle=False, num_workers=1
     )
 
     gen_loss = getattr(losses, gen_loss_str)()
     disc_loss = getattr(losses, disc_loss_str)()
 
-    # instantiate network, optimizer, loss...
-    # main loop, calls train and test
-    # log results
-    # plot stuff
-    pass
+    generator = Generator(latent_dim, channels_img, gen_features, num_classes, img_size, embedding_dim).to(device)
+    discriminator = Discriminator(channels_img, disc_features, num_classes, img_size).to(device)
+
+    # for tensorboard plotting
+    writer_real = SummaryWriter(experiments_dir/Path("real"))
+    writer_fake = SummaryWriter(experiments_dir/Path("fake"))
+    step = 0
+
+    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=lr, betas=(0.9, 0.999))
+    disc_optimizer = torch.optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.005)
+
+    for epoch in tqdm(range(epochs)):
+        for batch_idx, (data, labels) in enumerate(tqdm(data_loader)):
+            data, labels = data.to(device), labels.to(device)
+            mini_batch_size = data.shape[0]
+            real_targets = torch.ones(mini_batch_size)
+            fake_targets = torch.zeros(mini_batch_size)
+
+            for _ in range(disc_iterations):
+                noise = torch.randn(mini_batch_size, latent_dim, 4, 4).to(device)
+                fake = generator(noise, labels)
+                predicition_real = discriminator(data, labels).view(-1)
+                predicition_fake = discriminator(fake, labels).view(-1)
+                loss_real = disc_loss(predicition_real, real_targets)
+                loss_fake = disc_loss(predicition_fake, fake_targets)
+                loss_disc = loss_real + loss_fake
+                discriminator.zero_grad()
+                loss_disc.backward(retain_graph=True)
+                disc_optimizer.step()
+
+        predicition_fake = discriminator(fake, labels).view(-1)
+        loss_gen = gen_loss(predicition_fake, real_targets)
+        generator.zero_grad()
+        loss_gen.backward()
+        gen_optimizer.step()
 
 
 def read_config(_input):
@@ -195,7 +152,20 @@ def read_config(_input):
         sys.exit(1)
 
     try:
-        config = (
+        config_dataset = (
+            img_size,
+            channels_img,
+            num_classes,
+        ) = list(config["dataset"].values())
+
+        config_model = (
+            disc_features,
+            gen_features,
+            latent_dim,
+            embedding_dim,
+        ) = list(config["nets"].values())
+
+        config_training = (
             batch_size,
             test_batch_size,
             epochs,
@@ -203,9 +173,18 @@ def read_config(_input):
             gamma,
             cuda,
             seed,
+            disc_iterations,
             gen_loss,
             disc_loss,
         ) = list(config["training"].values())
+
+        assert type(img_size) == int
+        assert type(channels_img) == int
+        assert type(num_classes) == int
+        assert type(disc_features) == int
+        assert type(gen_features) == int
+        assert type(latent_dim) == int
+        assert type(embedding_dim) == int
         assert type(batch_size) == int
         assert type(test_batch_size) == int
         assert type(epochs) == int
@@ -219,6 +198,15 @@ def read_config(_input):
         print("The given .yaml file uses a wrong convention.")
         print(
             "The expected format for the .yaml file is:\n"
+            "dataset:\n"
+            "    img_size: int\n"
+            "    channels_img: int\n"
+            "    num_classes: int\n"
+            "nets:\n"
+            "    disc_features: int\n"
+            "    gen_features: int\n"
+            "    latent_dims: int\n"
+            "    embedding_dim: int\n"
             "training:\n"
             "    batch_size: int\n"
             "    test_batch_size: int\n"
@@ -233,7 +221,7 @@ def read_config(_input):
         print(e)
         sys.exit(1)
 
-    return config
+    return config_dataset + config_model + config_training
 
 
 if __name__ == "__main__":

@@ -8,9 +8,10 @@ from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 import tqdm
+from torch.utils.tensorboard import SummaryWriter
 
 import yaml
-import nets
+from nets import Discriminator, Generator
 import losses
 
 from torch.autograd import Variable
@@ -29,6 +30,8 @@ def main():
     (
         batch_size,
         test_batch_size,
+        image_size,
+        channels_img,
         epochs,
         lr,
         gamma,
@@ -47,12 +50,13 @@ def main():
     device = torch.device("cuda" if (cuda and torch.cuda.is_available()) else "cpu")
 
     # PyTorch transforms
-    transform = transforms.Compose(
-        [
-            transforms.Resize((32)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5,), (0.5,)),
-        ]
+    transforms = transforms.Compose(
+    [
+        transforms.Resize(image_size),
+        transforms.ToTensor(),
+        transforms.Normalize(
+            [0.5 for _ in range(channels_img)], [0.5 for _ in range(channels_img)]),
+    ]
     )
 
     # Read CIFAR10 data and apply transformation
@@ -74,33 +78,21 @@ def main():
     gen_loss = getattr(losses, gen_loss_str)()
     disc_loss = getattr(losses, disc_loss_str)()
 
-    generator = DefaultGen()
-    discriminator = DefaultDis()
+    generator = Generator(z_dim, channels_img, features_gen, num_classes, image_size, gen_embedding).to(device)
+    discriminator = Discriminator(channels_img, features_dis, num_classes, image_size).to(device)
+
+    # for tensorboard plotting
+    writer_real = SummaryWriter(experiments_dir/Path("real"))
+    writer_fake = SummaryWriter(experiments_dir/Path("fake"))
+    step = 0
 
     # Optimizer for the generator
-    optimizer_generator = torch.optim.Adam(generator.parameters(), lr=0.001, betas=(0.9, 0.999))
+    optimizer_generator = torch.optim.Adam(generator.parameters(), lr=lr, betas=(0.9, 0.999))
 
     # Optimizer for the discriminator
-    optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=0.0001, betas=(0.5, 0.999), weight_decay=0.005)
+    optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.005)
 
-    for epoch in range(epochs):
-        # Create valid and fake labels as targets
-        valid = Variable(torch.FloatTensor(len(data_loader), 1).fill_(1.0), requires_grad=False) #real
-        fake = Variable(torch.FloatTensor(len(data_loader), 1).fill_(0.0), requires_grad=False) #fake
-
-        real_imgs = Variable(data.type(torch.FloatTensor))
-
-        # Create a random (sample from normal distribution) matrix as an input for the generator
-        z = Variable(torch.FloatTensor(np.random.normal(0, 1, (len(data_loader), 128, 4, 4))))
-
-        data_loader_z = torch.utils.data.DataLoader(
-            z, batch_size=1, shuffle=True, num_workers=1)
-
-
-    # instantiate network, optimizer, loss...
-    # main loop, calls train and test
-    # log results
-    # plot stuff
+    
     pass
 
 

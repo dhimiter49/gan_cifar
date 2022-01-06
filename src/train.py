@@ -26,33 +26,38 @@ models_dir = Path()
 
 
 def main():
-    # read config file
     (
+        img_size,
+        channels_img,
+        num_classes,
+        disc_features,
+        gen_features,
+        latent_dim,
+        embedding_dim,
         batch_size,
         test_batch_size,
-        image_size,
-        channels_img,
         epochs,
         lr,
         gamma,
         cuda,
         seed,
+        disc_iterations,
         gen_loss_str,
         disc_loss_str,
     ) = read_config(sys.argv)
 
-    # Path(experiments_dir).mkdir(parents=True, exist_ok=True)
-    # Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
-    # open(models_dir, "w+")
+    Path(experiments_dir).mkdir(parents=True, exist_ok=True)
+    Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
+    open(models_dir, "w+")
 
     np.random.seed(seed)
     torch.manual_seed(seed)
     device = torch.device("cuda" if (cuda and torch.cuda.is_available()) else "cpu")
 
     # PyTorch transforms
-    transforms = transforms.Compose(
+    trans = transforms.Compose(
     [
-        transforms.Resize(image_size),
+        transforms.Resize(img_size),
         transforms.ToTensor(),
         transforms.Normalize(
             [0.5 for _ in range(channels_img)], [0.5 for _ in range(channels_img)]),
@@ -61,38 +66,35 @@ def main():
 
     # Read CIFAR10 data and apply transformation
     cifar10_dataset = torchvision.datasets.CIFAR10(
-        root="./dataset", train=True, download=True, transform=transform
+        root="./dataset", train=True, download=True, transform=trans
     )
     cifar10_dataset_test = torchvision.datasets.CIFAR10(
-        root="./dataset", train=False, download=True, transform=transform
+        root="./dataset", train=False, download=True, transform=trans
     )
 
 
     data_loader = torch.utils.data.DataLoader(
-        cifar10_dataset, batch_size=1, shuffle=True, num_workers=1
+        cifar10_dataset, batch_size=batch_size, shuffle=True, num_workers=1
     )
     data_loader_test = torch.utils.data.DataLoader(
-        cifar10_dataset_test, batch_size=1, shuffle=False, num_workers=1
+        cifar10_dataset_test, batch_size=test_batch_size, shuffle=False, num_workers=1
     )
 
     gen_loss = getattr(losses, gen_loss_str)()
     disc_loss = getattr(losses, disc_loss_str)()
 
-    generator = Generator(z_dim, channels_img, features_gen, num_classes, image_size, gen_embedding).to(device)
-    discriminator = Discriminator(channels_img, features_dis, num_classes, image_size).to(device)
+    generator = Generator(latent_dim, channels_img, gen_features, num_classes, img_size, embedding_dim).to(device)
+    discriminator = Discriminator(channels_img, disc_features, num_classes, img_size).to(device)
 
     # for tensorboard plotting
     writer_real = SummaryWriter(experiments_dir/Path("real"))
     writer_fake = SummaryWriter(experiments_dir/Path("fake"))
     step = 0
 
-    # Optimizer for the generator
-    optimizer_generator = torch.optim.Adam(generator.parameters(), lr=lr, betas=(0.9, 0.999))
+    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=lr, betas=(0.9, 0.999))
+    disc_optimizer = torch.optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.005)
 
-    # Optimizer for the discriminator
-    optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.005)
-
-    for epoch in range(tqdm(num_epochs)):
+    for epoch in tqdm(range(epochs)):
         for batch_idx, (data, labels) in enumerate(tqdm(data_loader)):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]

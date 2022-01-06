@@ -9,12 +9,10 @@ import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
-
 import yaml
+
 from nets import Discriminator, Generator
 import losses
-
-from torch.autograd import Variable
 
 import ssl
 
@@ -55,7 +53,6 @@ def main():
     torch.manual_seed(seed)
     device = torch.device("cuda" if (cuda and torch.cuda.is_available()) else "cpu")
 
-    # PyTorch transforms
     trans = transforms.Compose(
         [
             transforms.Resize(img_size),
@@ -91,7 +88,6 @@ def main():
         channels_img, disc_features, num_classes, img_size
     ).to(device)
 
-    # for tensorboard plotting
     writer_real = SummaryWriter(experiments_dir / Path("real"))
     writer_fake = SummaryWriter(experiments_dir / Path("fake"))
     step = 0

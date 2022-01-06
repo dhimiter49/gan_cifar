@@ -102,21 +102,22 @@ def main():
             fake_targets = torch.zeros(mini_batch_size)
 
             for _ in range(disc_iterations):
-                noise = torch.randn(mini_batch_size, z_dim, 4, 4).to(device)
+                noise = torch.randn(mini_batch_size, latent_dim, 4, 4).to(device)
                 fake = generator(noise, labels)
-                predicition_real = discriminator(data, labels).reshape(-1)
-                predicition_fake = discriminator(fake, labels).reshape(-1)
+                predicition_real = discriminator(data, labels).view(-1)
+                predicition_fake = discriminator(fake, labels).view(-1)
                 loss_real = disc_loss(predicition_real, real_targets)
                 loss_fake = disc_loss(predicition_fake, fake_targets)
+                loss_disc = loss_real + loss_fake
                 discriminator.zero_grad()
-                loss_discriminator.backward(retain_graph=True)
-                optimizer_discriminator.step()
+                loss_disc.backward(retain_graph=True)
+                disc_optimizer.step()
 
-        predicition_fake = discriminator(fake, labels).reshape(-1)
-        loss_generator = gen_loss(predicition_fake, real_targets)
+        predicition_fake = discriminator(fake, labels).view(-1)
+        loss_gen = gen_loss(predicition_fake, real_targets)
         generator.zero_grad()
-        loss_generator.backward()
-        optimizer_generator.step()
+        loss_gen.backward()
+        gen_optimizer.step()
 
 
 def read_config(_input):

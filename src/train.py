@@ -123,7 +123,7 @@ def main():
                 prediction_fake = discriminator(fake, labels).view(-1)
                 loss_real = disc_loss(prediction_real, real_targets)
                 loss_fake = disc_loss(prediction_fake, fake_targets)
-                loss_disc = loss_real + loss_fake
+                loss_disc = (loss_real + loss_fake) * 0.5
                 batch_loss_disc.append(loss_disc.item())
                 discriminator.zero_grad()
                 loss_disc.backward(retain_graph=True)

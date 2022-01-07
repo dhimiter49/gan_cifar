@@ -121,11 +121,11 @@ def main():
                 loss_disc.backward(retain_graph=True)
                 disc_optimizer.step()
 
-        predicition_fake = discriminator(fake, labels).view(-1)
-        loss_gen = gen_loss(predicition_fake, real_targets)
-        generator.zero_grad()
-        loss_gen.backward()
-        gen_optimizer.step()
+            predicition_fake = discriminator(fake, labels).view(-1)
+            loss_gen = gen_loss(predicition_fake, real_targets)
+            generator.zero_grad()
+            loss_gen.backward()
+            gen_optimizer.step()
 
 
 def read_config(_input):

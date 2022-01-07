@@ -9,14 +9,13 @@ import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
-
 import yaml
+
 from nets import Discriminator, Generator
 import losses
 
-from torch.autograd import Variable
-
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 working_dir = Path(__file__).parent.parent.absolute()
@@ -27,41 +26,41 @@ models_dir = Path()
 
 def main():
     (
-        img_size,
-        channels_img,
-        num_classes,
-        disc_features,
-        gen_features,
-        latent_dim,
-        embedding_dim,
-        batch_size,
-        test_batch_size,
-        epochs,
-        lr,
-        gamma,
-        cuda,
-        seed,
-        disc_iterations,
-        gen_loss_str,
-        disc_loss_str,
+        IMG_SIZE,
+        CHANNELS_IMG,
+        NUM_CLASSES,
+        DISC_FEATURES,
+        GEN_FEATURES,
+        LATENT_DIM,
+        EMBEDDING_DIM,
+        BATCH_SIZE,
+        TEST_BATCH_SIZE,
+        EPOCHS,
+        LR,
+        GAMMA,
+        CUDA,
+        SEED,
+        DISC_ITERATIONS,
+        GEN_LOSS_STR,
+        DISC_LOSS_STR,
     ) = read_config(sys.argv)
 
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
     Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
     open(models_dir, "w+")
 
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    device = torch.device("cuda" if (cuda and torch.cuda.is_available()) else "cpu")
+    np.random.seed(SEED)
+    torch.manual_seed(SEED)
+    device = torch.device("cuda" if (CUDA and torch.cuda.is_available()) else "cpu")
 
-    # PyTorch transforms
     trans = transforms.Compose(
-    [
-        transforms.Resize(img_size),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            [0.5 for _ in range(channels_img)], [0.5 for _ in range(channels_img)]),
-    ]
+        [
+            transforms.Resize(IMG_SIZE),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                [0.5 for _ in range(CHANNELS_IMG)], [0.5 for _ in range(CHANNELS_IMG)]
+            ),
+        ]
     )
 
     # Read CIFAR10 data and apply transformation
@@ -72,37 +71,41 @@ def main():
         root="./dataset", train=False, download=True, transform=trans
     )
 
-
     data_loader = torch.utils.data.DataLoader(
-        cifar10_dataset, batch_size=batch_size, shuffle=True, num_workers=1
+        cifar10_dataset, batch_size=BATCH_SIZE, shuffle=True
     )
     data_loader_test = torch.utils.data.DataLoader(
-        cifar10_dataset_test, batch_size=test_batch_size, shuffle=False, num_workers=1
+        cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False
     )
 
-    gen_loss = getattr(losses, gen_loss_str)()
-    disc_loss = getattr(losses, disc_loss_str)()
+    gen_loss = getattr(losses, GEN_LOSS_STR)()
+    disc_loss = getattr(losses, DISC_LOSS_STR)()
 
-    generator = Generator(latent_dim, channels_img, gen_features, num_classes, img_size, embedding_dim).to(device)
-    discriminator = Discriminator(channels_img, disc_features, num_classes, img_size).to(device)
+    generator = Generator(
+        LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM
+    ).to(device)
+    discriminator = Discriminator(
+        CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
+    ).to(device)
 
-    # for tensorboard plotting
-    writer_real = SummaryWriter(experiments_dir/Path("real"))
-    writer_fake = SummaryWriter(experiments_dir/Path("fake"))
+    writer_real = SummaryWriter(experiments_dir / Path("real"))
+    writer_fake = SummaryWriter(experiments_dir / Path("fake"))
     step = 0
 
-    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=lr, betas=(0.9, 0.999))
-    disc_optimizer = torch.optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.005)
+    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=LR, betas=(0.9, 0.999))
+    disc_optimizer = torch.optim.Adam(
+        discriminator.parameters(), lr=LR, betas=(0.5, 0.999), weight_decay=0.005
+    )
 
-    for epoch in tqdm(range(epochs)):
+    for epoch in tqdm(range(EPOCHS)):
         for batch_idx, (data, labels) in enumerate(tqdm(data_loader)):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
-            real_targets = torch.ones(mini_batch_size)
-            fake_targets = torch.zeros(mini_batch_size)
+            real_targets = torch.ones(mini_batch_size).to(device)
+            fake_targets = torch.zeros(mini_batch_size).to(device)
 
-            for _ in range(disc_iterations):
-                noise = torch.randn(mini_batch_size, latent_dim, 4, 4).to(device)
+            for _ in range(DISC_ITERATIONS):
+                noise = torch.randn(mini_batch_size, LATENT_DIM, 4, 4).to(device)
                 fake = generator(noise, labels)
                 predicition_real = discriminator(data, labels).view(-1)
                 predicition_fake = discriminator(fake, labels).view(-1)

@@ -103,7 +103,7 @@ def main():
     )
 
     for epoch in tqdm(range(EPOCHS)):
-        for batch_idx, (data, labels) in enumerate(tqdm(data_loader)):
+        for (data, labels) in tqdm(data_loader):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
             real_targets = torch.ones(mini_batch_size).to(device)
@@ -112,17 +112,17 @@ def main():
             for _ in range(DISC_ITERATIONS):
                 noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
                 fake = generator(noise, labels)
-                predicition_real = discriminator(data, labels).view(-1)
-                predicition_fake = discriminator(fake, labels).view(-1)
-                loss_real = disc_loss(predicition_real, real_targets)
-                loss_fake = disc_loss(predicition_fake, fake_targets)
+                prediction_real = discriminator(data, labels).view(-1)
+                prediction_fake = discriminator(fake, labels).view(-1)
+                loss_real = disc_loss(prediction_real, real_targets)
+                loss_fake = disc_loss(prediction_fake, fake_targets)
                 loss_disc = loss_real + loss_fake
                 discriminator.zero_grad()
                 loss_disc.backward(retain_graph=True)
                 disc_optimizer.step()
 
-            predicition_fake = discriminator(fake, labels).view(-1)
-            loss_gen = gen_loss(predicition_fake, real_targets)
+            prediction_fake = discriminator(fake, labels).view(-1)
+            loss_gen = gen_loss(prediction_fake, real_targets)
             generator.zero_grad()
             loss_gen.backward()
             gen_optimizer.step()

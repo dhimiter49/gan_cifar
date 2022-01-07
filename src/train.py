@@ -44,7 +44,8 @@ def main():
         TEST_EVERY,
         SAVE_EVERY,
         EPOCHS,
-        LR,
+        GEN_LR,
+        DISC_LR,
         GAMMA,
         CUDA,
         SEED,
@@ -99,9 +100,9 @@ def main():
 
     writer = SummaryWriter(experiments_dir)
 
-    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=LR, betas=(0.9, 0.999))
+    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=GEN_LR, betas=(0.9, 0.999))
     disc_optimizer = torch.optim.Adam(
-        discriminator.parameters(), lr=LR, betas=(0.5, 0.999), weight_decay=0.005
+        discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
     )
 
     for epoch in tqdm(range(EPOCHS)):
@@ -237,7 +238,8 @@ def read_config(_input):
             test_every,
             save_every,
             epochs,
-            lr,
+            gen_lr,
+            disc_lr,
             gamma,
             cuda,
             seed,
@@ -258,7 +260,8 @@ def read_config(_input):
         assert type(test_every) == int
         assert type(save_every) == int
         assert type(epochs) == int
-        assert type(lr) == float
+        assert type(gen_lr) == float
+        assert type(disc_lr) == float
         assert type(gamma) == float
         assert type(cuda) == bool
         assert type(seed) == int
@@ -283,7 +286,8 @@ def read_config(_input):
             "    test_every: int\n"
             "    save_every: int\n"
             "    epochs: int\n"
-            "    lr: float\n"
+            "    gen_lr: float\n"
+            "    disc_lr: float\n"
             "    gamma: float\n"
             "    cuda: bool\n"
             "    seed: int"

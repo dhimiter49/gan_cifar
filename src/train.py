@@ -16,6 +16,10 @@ import losses
 
 import ssl
 
+import os
+os.environ["OMP_NUM_THREADS"] = "4"
+
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 working_dir = Path(__file__).parent.parent.absolute()
@@ -72,10 +76,10 @@ def main():
     )
 
     data_loader = torch.utils.data.DataLoader(
-        cifar10_dataset, batch_size=BATCH_SIZE, shuffle=True
+        cifar10_dataset, batch_size=BATCH_SIZE, shuffle=True,num_workers=4
     )
     data_loader_test = torch.utils.data.DataLoader(
-        cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False
+        cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False,num_workers=4
     )
 
     gen_loss = getattr(losses, GEN_LOSS_STR)()

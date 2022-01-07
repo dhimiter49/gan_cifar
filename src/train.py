@@ -14,16 +14,17 @@ import yaml
 from nets import Discriminator, Generator
 import losses
 
-import ssl
-
 import os
+
 os.environ["OMP_NUM_THREADS"] = "4"
 
+# for windows
+import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
 working_dir = Path(__file__).parent.parent.absolute()
-unique_key = str(str(time.ctime())).replace(" ", "_")
+unique_key = str(str(time.ctime())).replace(" ", "_").replace(":", "_")
 experiments_dir = Path()  # set this paths after reading the config file
 models_dir = Path()
 
@@ -76,10 +77,10 @@ def main():
     )
 
     data_loader = torch.utils.data.DataLoader(
-        cifar10_dataset, batch_size=BATCH_SIZE, shuffle=True,num_workers=4
+        cifar10_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4
     )
     data_loader_test = torch.utils.data.DataLoader(
-        cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False,num_workers=4
+        cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False, num_workers=4
     )
 
     gen_loss = getattr(losses, GEN_LOSS_STR)()
@@ -109,7 +110,7 @@ def main():
             fake_targets = torch.zeros(mini_batch_size).to(device)
 
             for _ in range(DISC_ITERATIONS):
-                noise = torch.randn(mini_batch_size, LATENT_DIM, 4, 4).to(device)
+                noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
                 fake = generator(noise, labels)
                 predicition_real = discriminator(data, labels).view(-1)
                 predicition_fake = discriminator(fake, labels).view(-1)

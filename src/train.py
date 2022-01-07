@@ -40,6 +40,7 @@ def main():
         EMBEDDING_DIM,
         BATCH_SIZE,
         TEST_BATCH_SIZE,
+        TEST_EVERY,
         EPOCHS,
         LR,
         GAMMA,
@@ -93,9 +94,7 @@ def main():
         CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
     ).to(device)
 
-    writer_real = SummaryWriter(experiments_dir / Path("real"))
-    writer_fake = SummaryWriter(experiments_dir / Path("fake"))
-    step = 0
+    writer = SummaryWriter(experiments_dir)
 
     gen_optimizer = torch.optim.Adam(generator.parameters(), lr=LR, betas=(0.9, 0.999))
     disc_optimizer = torch.optim.Adam(
@@ -187,6 +186,7 @@ def read_config(_input):
         config_training = (
             batch_size,
             test_batch_size,
+            test_every,
             epochs,
             lr,
             gamma,
@@ -206,6 +206,7 @@ def read_config(_input):
         assert type(embedding_dim) == int
         assert type(batch_size) == int
         assert type(test_batch_size) == int
+        assert type(test_every) == int
         assert type(epochs) == int
         assert type(lr) == float
         assert type(gamma) == float
@@ -229,6 +230,7 @@ def read_config(_input):
             "training:\n"
             "    batch_size: int\n"
             "    test_batch_size: int\n"
+            "    test_every: int\n"
             "    epochs: int\n"
             "    lr: float\n"
             "    gamma: float\n"

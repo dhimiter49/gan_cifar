@@ -137,6 +137,44 @@ def main():
         writer.add_scalar("train_loss/discriminator", epoch_loss_disc)
         writer.add_scalar("train_loss/generator", epoch_loss_disc)
 
+        if epoch + 1 % TEST_EVERY == 0:
+            generator.eval()
+            discriminator.eval()
+            epoch_loss_disc = 0
+            epoch_loss_gen = 0
+            accuracy_real = 0.0
+            accuracy_fake = 0.0
+            for (data, labels) in tqdm(data_loader_test):
+                data, labels = data.to(device), labels.to(device)
+                mini_batch_size = data.shape[0]
+                real_targets = torch.ones(mini_batch_size).to(device)
+                fake_targets = torch.zeros(mini_batch_size).to(device)
+
+                noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
+                fake = generator(noise, labels)
+                prediction_real = discriminator(data, labels).view(-1)
+                prediction_fake = discriminator(fake, labels).view(-1)
+                loss_real = disc_loss(prediction_real, real_targets)
+                loss_fake = disc_loss(prediction_fake, fake_targets)
+                loss_disc = loss_real + loss_fake
+                epoch_loss_disc += loss_disc.item()
+                loss_gen = gen_loss(prediction_fake, real_targets)
+                epoch_loss_gen += loss_gen.item()
+
+                prediction_fake = prediction_fake >= 0.5
+                prediction_real = prediction_real >= 0.5
+                batch_correct_fake_pred = prediction_fake.eq(fake_targets).sum().item()
+                batch_correct_real_pred = prediction_real.eq(real_targets).sum().item()
+                accuracy_fake +- batch_correct_fake_pred
+                accuracy_real += batch_correct_real_pred
+
+            accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
+            accuracy_real = accuracy_real / len(data_loader_test.dataset)
+            writer.add_scalar("test_loss/discriminator", epoch_loss_disc)
+            writer.add_scalar("test_loss/generator", epoch_loss_gen)
+            writer.add_scalar("test_accuracy/real", accuracy_real)
+            writer.add_scalar("test_accuracy/fake", accuracy_fake)
+
 
 def read_config(_input):
     if len(_input) == 1:

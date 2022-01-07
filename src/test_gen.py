@@ -39,6 +39,8 @@ def main():
         CUDA,
     ) = read_config(sys.argv)
 
+    Path(experiments_dir).mkdir(parents=True, exist_ok=True)
+
     device = torch.device("cuda" if (CUDA and torch.cuda.is_available()) else "cpu")
     generator = Generator(
         LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM
@@ -76,7 +78,9 @@ def read_config(_input):
 
     global experiments_dir
     experiments_dir = (
-        working_dir / Path("experiments/" + path_config.stem) / Path(path_model.stem)
+        working_dir
+        / Path("experiments/" + path_config.stem)
+        / Path(path_model.stem.removesuffix("_gen"))
     )
 
     try:

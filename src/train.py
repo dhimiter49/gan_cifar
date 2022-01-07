@@ -137,8 +137,8 @@ def main():
             loss_gen.backward()
             gen_optimizer.step()
 
-        writer.add_scalar("train_loss/discriminator", epoch_loss_disc)
-        writer.add_scalar("train_loss/generator", epoch_loss_disc)
+        writer.add_scalar("train_loss/discriminator", epoch_loss_disc, epoch)
+        writer.add_scalar("train_loss/generator", epoch_loss_disc, epoch)
 
         if (epoch + 1) % TEST_EVERY == 0:
             generator.eval()
@@ -173,10 +173,10 @@ def main():
 
             accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
             accuracy_real = accuracy_real / len(data_loader_test.dataset)
-            writer.add_scalar("test_loss/discriminator", epoch_loss_disc)
-            writer.add_scalar("test_loss/generator", epoch_loss_gen)
-            writer.add_scalar("test_accuracy/real", accuracy_real)
-            writer.add_scalar("test_accuracy/fake", accuracy_fake)
+            writer.add_scalar("test_loss/discriminator", epoch_loss_disc, epoch)
+            writer.add_scalar("test_loss/generator", epoch_loss_gen, epoch)
+            writer.add_scalar("test_accuracy/real", accuracy_real, epoch)
+            writer.add_scalar("test_accuracy/fake", accuracy_fake, epoch)
 
         if (epoch + 1) % SAVE_EVERY == 0:
             torch.save(generator.state_dict(), gen_dir)

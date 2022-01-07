@@ -138,7 +138,7 @@ def main():
             gen_optimizer.step()
 
         writer.add_scalar("train_loss/discriminator", epoch_loss_disc, epoch)
-        writer.add_scalar("train_loss/generator", epoch_loss_disc, epoch)
+        writer.add_scalar("train_loss/generator", epoch_loss_gen, epoch)
 
         if (epoch + 1) % TEST_EVERY == 0:
             generator.eval()

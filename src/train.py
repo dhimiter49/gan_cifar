@@ -26,7 +26,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 working_dir = Path(__file__).parent.parent.absolute()
 unique_key = str(str(time.ctime())).replace(" ", "_").replace(":", "_")
 experiments_dir = Path()  # set this paths after reading the config file
-models_dir = Path()
+gen_dir = Path()
+disc_dir = Path()
 
 
 def main():
@@ -41,6 +42,7 @@ def main():
         BATCH_SIZE,
         TEST_BATCH_SIZE,
         TEST_EVERY,
+        SAVE_EVERY,
         EPOCHS,
         LR,
         GAMMA,
@@ -52,8 +54,9 @@ def main():
     ) = read_config(sys.argv)
 
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
-    Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
-    open(models_dir, "w+")
+    Path(gen_dir.parent).mkdir(parents=True, exist_ok=True)
+    open(gen_dir, "w+")
+    open(disc_dir, "w+")
 
     np.random.seed(SEED)
     torch.manual_seed(SEED)
@@ -137,7 +140,7 @@ def main():
         writer.add_scalar("train_loss/discriminator", epoch_loss_disc)
         writer.add_scalar("train_loss/generator", epoch_loss_disc)
 
-        if epoch + 1 % TEST_EVERY == 0:
+        if (epoch + 1) % TEST_EVERY == 0:
             generator.eval()
             discriminator.eval()
             epoch_loss_disc = 0
@@ -165,7 +168,7 @@ def main():
                 prediction_real = prediction_real >= 0.5
                 batch_correct_fake_pred = prediction_fake.eq(fake_targets).sum().item()
                 batch_correct_real_pred = prediction_real.eq(real_targets).sum().item()
-                accuracy_fake +- batch_correct_fake_pred
+                accuracy_fake += batch_correct_fake_pred
                 accuracy_real += batch_correct_real_pred
 
             accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
@@ -174,6 +177,10 @@ def main():
             writer.add_scalar("test_loss/generator", epoch_loss_gen)
             writer.add_scalar("test_accuracy/real", accuracy_real)
             writer.add_scalar("test_accuracy/fake", accuracy_fake)
+
+        if (epoch + 1) % SAVE_EVERY == 0:
+            torch.save(generator.state_dict(), gen_dir)
+            torch.save(discriminator.state_dict(), disc_dir)
 
 
 def read_config(_input):
@@ -187,12 +194,15 @@ def read_config(_input):
         print("Train model using %s as configuration file." % (_input[1]))
         path_config = working_dir / Path("{}".format(_input[1]))
 
-    global experiments_dir, models_dir
+    global experiments_dir, gen_dir, disc_dir
     experiments_dir = (
         working_dir / Path("experiments/" + path_config.stem) / Path(unique_key)
     )
-    models_dir = (
-        working_dir / Path("models/" + path_config.stem) / Path(unique_key + ".pt")
+    gen_dir = (
+        working_dir / Path("models/" + path_config.stem) / Path(unique_key + "_gen.pt")
+    )
+    disc_dir = (
+        working_dir / Path("models/" + path_config.stem) / Path(unique_key + "_disc.pt")
     )
 
     if path_config.suffix != ".yaml":
@@ -225,6 +235,7 @@ def read_config(_input):
             batch_size,
             test_batch_size,
             test_every,
+            save_every,
             epochs,
             lr,
             gamma,
@@ -245,6 +256,7 @@ def read_config(_input):
         assert type(batch_size) == int
         assert type(test_batch_size) == int
         assert type(test_every) == int
+        assert type(save_every) == int
         assert type(epochs) == int
         assert type(lr) == float
         assert type(gamma) == float
@@ -269,6 +281,7 @@ def read_config(_input):
             "    batch_size: int\n"
             "    test_batch_size: int\n"
             "    test_every: int\n"
+            "    save_every: int\n"
             "    epochs: int\n"
             "    lr: float\n"
             "    gamma: float\n"

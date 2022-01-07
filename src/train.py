@@ -103,12 +103,17 @@ def main():
     )
 
     for epoch in tqdm(range(EPOCHS)):
+        generator.train()
+        discriminator.train()
+        epoch_loss_disc = 0
+        epoch_loss_gen = 0
         for (data, labels) in tqdm(data_loader):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
             real_targets = torch.ones(mini_batch_size).to(device)
             fake_targets = torch.zeros(mini_batch_size).to(device)
 
+            batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
                 noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
                 fake = generator(noise, labels)
@@ -117,15 +122,21 @@ def main():
                 loss_real = disc_loss(prediction_real, real_targets)
                 loss_fake = disc_loss(prediction_fake, fake_targets)
                 loss_disc = loss_real + loss_fake
+                batch_loss_disc.append(loss_disc.item())
                 discriminator.zero_grad()
                 loss_disc.backward(retain_graph=True)
                 disc_optimizer.step()
+            epoch_loss_disc += np.mean(batch_loss_disc)
 
             prediction_fake = discriminator(fake, labels).view(-1)
             loss_gen = gen_loss(prediction_fake, real_targets)
+            epoch_loss_gen += loss_gen.item()
             generator.zero_grad()
             loss_gen.backward()
             gen_optimizer.step()
+
+        writer.add_scalar("train_loss/discriminator", epoch_loss_disc)
+        writer.add_scalar("train_loss/generator", epoch_loss_disc)
 
 
 def read_config(_input):

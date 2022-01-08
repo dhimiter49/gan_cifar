@@ -7,7 +7,7 @@ nets:
     disc_features: 16
     gen_features: 16
     latent_dim: 128
-    embedding_dim: 128
+    embedding_dim: 16
 
 training:
     batch_size: 1000

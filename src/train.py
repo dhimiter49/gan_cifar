@@ -9,6 +9,7 @@ import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
+from pytorch_gan_metrics import get_inception_score, get_fid
 import yaml
 
 from nets import Discriminator, Generator
@@ -152,6 +153,9 @@ def main():
             epoch_loss_gen = 0
             accuracy_real = 0.0
             accuracy_fake = 0.0
+            incep_score = 0.0
+            incep_score_std = 0.0
+            frechet_distance = 0.0
             n_imgs_epoch = 50
             n_imgs = int(len(data_loader_test.dataset) / TEST_BATCH_SIZE) * n_imgs_epoch
             imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
@@ -173,6 +177,14 @@ def main():
                 loss_gen = gen_loss(prediction_fake, real_targets)
                 epoch_loss_gen += loss_gen.item()
 
+                # inception score and frechet inception distance
+                i_s, i_s_std = get_inception_score(fake / 2 + 0.5)
+                incep_score += i_s
+                incep_score_std += i_s_std
+                frechet_distance += get_fid(
+                    fake / 2 + 0.5, working_dir / Path("dataset/cifar10_fid_stats.npz")
+                )
+
                 # save random real/fake images
                 random_indexes = np.random.choice(
                     TEST_BATCH_SIZE, size=n_imgs_epoch, replace=False
@@ -191,12 +203,15 @@ def main():
                 accuracy_real += batch_correct_real_pred
 
             # tracking
-            accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
-            accuracy_real = accuracy_real / len(data_loader_test.dataset)
             writer.add_scalar("test_loss/discriminator", epoch_loss_disc, epoch)
             writer.add_scalar("test_loss/generator", epoch_loss_gen, epoch)
+            accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
+            accuracy_real = accuracy_real / len(data_loader_test.dataset)
             writer.add_scalar("test_accuracy/real", accuracy_real, epoch)
             writer.add_scalar("test_accuracy/fake", accuracy_fake, epoch)
+            writer.add_scalar("test_inception/score", incep_score, epoch)
+            writer.add_scalar("test_inception/std", incep_score_std, epoch)
+            writer.add_scalar("test_frechet_distance", frechet_distance, epoch)
             grid_real = torchvision.utils.make_grid(imgs_real, nrow=16, normalize=True)
             grid_fake = torchvision.utils.make_grid(imgs_fake, nrow=16, normalize=True)
             writer.add_image("real", grid_real, epoch)

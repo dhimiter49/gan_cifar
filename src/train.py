@@ -58,7 +58,7 @@ def main():
     Path(gen_dir.parent).mkdir(parents=True, exist_ok=True)
     open(gen_dir, "w+")
     open(disc_dir, "w+")
-    print("Saving experiment under: ", experiments_dir)
+    print("Saving experiment under: \t", experiments_dir)
     print("Saving experiment models under: ", gen_dir.parent)
 
     np.random.seed(SEED)
@@ -197,10 +197,10 @@ def main():
             writer.add_scalar("test_loss/generator", epoch_loss_gen, epoch)
             writer.add_scalar("test_accuracy/real", accuracy_real, epoch)
             writer.add_scalar("test_accuracy/fake", accuracy_fake, epoch)
-            img_grid_real = torchvision.utils.make_grid(imgs_real, normalize=True)
-            img_grid_fake = torchvision.utils.make_grid(imgs_fake, normalize=True)
-            writer.add_image("real", img_grid_real, epoch)
-            writer.add_image("fake", img_grid_fake, epoch)
+            grid_real = torchvision.utils.make_grid(imgs_real, nrow=16, normalize=True)
+            grid_fake = torchvision.utils.make_grid(imgs_fake, nrow=16, normalize=True)
+            writer.add_image("real", grid_real, epoch)
+            writer.add_image("fake", grid_fake, epoch)
 
         if (epoch + 1) % SAVE_EVERY == 0:
             torch.save(generator.state_dict(), gen_dir)

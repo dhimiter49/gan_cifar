@@ -110,7 +110,7 @@ def main():
         discriminator.train()
         epoch_loss_disc = 0
         epoch_loss_gen = 0
-        for (data, labels) in tqdm(data_loader):
+        for (data, labels) in tqdm(data_loader, leave=False):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
             real_targets = torch.ones(mini_batch_size).to(device)
@@ -148,7 +148,7 @@ def main():
             epoch_loss_gen = 0
             accuracy_real = 0.0
             accuracy_fake = 0.0
-            for (data, labels) in tqdm(data_loader_test):
+            for (data, labels) in tqdm(data_loader_test, leave=False):
                 data, labels = data.to(device), labels.to(device)
                 mini_batch_size = data.shape[0]
                 real_targets = torch.ones(mini_batch_size).to(device)

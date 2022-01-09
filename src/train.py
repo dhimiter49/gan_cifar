@@ -9,7 +9,7 @@ import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
-from pytorch_gan_metrics import get_inception_score, get_fid
+from pytorch_gan_metrics import get_inception_score_and_fid
 import yaml
 
 from nets import Discriminator, Generator
@@ -178,12 +178,12 @@ def main():
                 epoch_loss_gen += loss_gen.item()
 
                 # inception score and frechet inception distance
-                i_s, i_s_std = get_inception_score(fake / 2 + 0.5)
-                incep_score += i_s
-                incep_score_std += i_s_std
-                frechet_distance += get_fid(
+                (i_s, i_s_std), fid = get_inception_score_and_fid(
                     fake / 2 + 0.5, working_dir / Path("dataset/cifar10_fid_stats.npz")
                 )
+                incep_score += i_s
+                incep_score_std += i_s_std
+                frechet_distance += fid
 
                 # save random real/fake images
                 random_indexes = np.random.choice(

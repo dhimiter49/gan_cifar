@@ -204,12 +204,17 @@ def read_config(_input):
         working_dir / Path("experiments/" + path_config.stem) / Path(unique_key)
     )
     gen_dir = (
-        working_dir / Path("models/" + path_config.stem) / Path(unique_key + "_gen.pt")
+        working_dir
+        / Path("models/" + path_config.stem)
+        / Path(unique_key)
+        / Path("gen.pt")
     )
     disc_dir = (
-        working_dir / Path("models/" + path_config.stem) / Path(unique_key + "_disc.pt")
+        working_dir
+        / Path("models/" + path_config.stem)
+        / Path(unique_key)
+        / Path("disc.pt")
     )
-
     if path_config.suffix != ".yaml":
         print("Make sure that the configuration file is a .yaml file.")
         sys.exit(1)

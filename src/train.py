@@ -152,7 +152,11 @@ def main():
             epoch_loss_gen = 0
             accuracy_real = 0.0
             accuracy_fake = 0.0
-            for (data, labels) in tqdm(data_loader_test, leave=False):
+            n_imgs_epoch = 50
+            n_imgs = int(len(data_loader_test.dataset) / TEST_BATCH_SIZE) * n_imgs_epoch
+            imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
+            imgs_real = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
+            for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
                 data, labels = data.to(device), labels.to(device)
                 mini_batch_size = data.shape[0]
                 real_targets = torch.ones(mini_batch_size).to(device)
@@ -169,6 +173,16 @@ def main():
                 loss_gen = gen_loss(prediction_fake, real_targets)
                 epoch_loss_gen += loss_gen.item()
 
+                # save random real/fake images
+                random_indexes = np.random.choice(
+                    TEST_BATCH_SIZE, size=n_imgs_epoch, replace=False
+                )
+                start_idx = idx * n_imgs_epoch
+                end_idx = start_idx + n_imgs_epoch
+                imgs_real[start_idx:end_idx] = data[random_indexes]
+                imgs_fake[start_idx:end_idx] = fake[random_indexes]
+
+                # accuracy
                 prediction_fake = prediction_fake >= 0.5
                 prediction_real = prediction_real >= 0.5
                 batch_correct_fake_pred = prediction_fake.eq(fake_targets).sum().item()
@@ -176,12 +190,17 @@ def main():
                 accuracy_fake += batch_correct_fake_pred
                 accuracy_real += batch_correct_real_pred
 
+            # tracking
             accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
             accuracy_real = accuracy_real / len(data_loader_test.dataset)
             writer.add_scalar("test_loss/discriminator", epoch_loss_disc, epoch)
             writer.add_scalar("test_loss/generator", epoch_loss_gen, epoch)
             writer.add_scalar("test_accuracy/real", accuracy_real, epoch)
             writer.add_scalar("test_accuracy/fake", accuracy_fake, epoch)
+            img_grid_real = torchvision.utils.make_grid(imgs_real, normalize=True)
+            img_grid_fake = torchvision.utils.make_grid(imgs_fake, normalize=True)
+            writer.add_image("real", img_grid_real, epoch)
+            writer.add_image("fake", img_grid_fake, epoch)
 
         if (epoch + 1) % SAVE_EVERY == 0:
             torch.save(generator.state_dict(), gen_dir)

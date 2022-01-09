@@ -58,6 +58,8 @@ def main():
     Path(gen_dir.parent).mkdir(parents=True, exist_ok=True)
     open(gen_dir, "w+")
     open(disc_dir, "w+")
+    print("Saving experiment under: ", experiments_dir)
+    print("Saving experiment models under: ", gen_dir.parent)
 
     np.random.seed(SEED)
     torch.manual_seed(SEED)
@@ -100,7 +102,9 @@ def main():
 
     writer = SummaryWriter(experiments_dir)
 
-    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=GEN_LR, betas=(0.9, 0.999))
+    gen_optimizer = torch.optim.Adam(
+        generator.parameters(), lr=GEN_LR, betas=(0.9, 0.999)
+    )
     disc_optimizer = torch.optim.Adam(
         discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
     )

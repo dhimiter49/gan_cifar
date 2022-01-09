@@ -7,13 +7,16 @@ nets:
     disc_features: 16
     gen_features: 16
     latent_dim: 128
-    embedding_dim: 128
+    embedding_dim: 16
 
 training:
     batch_size: 1000
     test_batch_size: 1000
+    test_every: 10
+    save_every: 50
     epochs: 1000
-    lr: 0.0005
+    gen_lr: 0.001
+    disc_lr: 0.0001
     gamma: 0.5
     cuda: True # disable cuda if needed
     seed: 0

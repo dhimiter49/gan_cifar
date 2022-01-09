@@ -26,7 +26,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 working_dir = Path(__file__).parent.parent.absolute()
 unique_key = str(str(time.ctime())).replace(" ", "_").replace(":", "_")
 experiments_dir = Path()  # set this paths after reading the config file
-models_dir = Path()
+gen_dir = Path()
+disc_dir = Path()
 
 
 def main():
@@ -40,8 +41,11 @@ def main():
         EMBEDDING_DIM,
         BATCH_SIZE,
         TEST_BATCH_SIZE,
+        TEST_EVERY,
+        SAVE_EVERY,
         EPOCHS,
-        LR,
+        GEN_LR,
+        DISC_LR,
         GAMMA,
         CUDA,
         SEED,
@@ -51,8 +55,11 @@ def main():
     ) = read_config(sys.argv)
 
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
-    Path(models_dir.parent).mkdir(parents=True, exist_ok=True)
-    open(models_dir, "w+")
+    Path(gen_dir.parent).mkdir(parents=True, exist_ok=True)
+    open(gen_dir, "w+")
+    open(disc_dir, "w+")
+    print("Saving experiment under: \t", experiments_dir)
+    print("Saving experiment models under: ", gen_dir.parent)
 
     np.random.seed(SEED)
     torch.manual_seed(SEED)
@@ -93,39 +100,111 @@ def main():
         CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
     ).to(device)
 
-    writer_real = SummaryWriter(experiments_dir / Path("real"))
-    writer_fake = SummaryWriter(experiments_dir / Path("fake"))
-    step = 0
+    writer = SummaryWriter(experiments_dir)
 
-    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=LR, betas=(0.9, 0.999))
+    gen_optimizer = torch.optim.Adam(
+        generator.parameters(), lr=GEN_LR, betas=(0.9, 0.999)
+    )
     disc_optimizer = torch.optim.Adam(
-        discriminator.parameters(), lr=LR, betas=(0.5, 0.999), weight_decay=0.005
+        discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
     )
 
     for epoch in tqdm(range(EPOCHS)):
-        for batch_idx, (data, labels) in enumerate(tqdm(data_loader)):
+        generator.train()
+        discriminator.train()
+        epoch_loss_disc = 0
+        epoch_loss_gen = 0
+        for (data, labels) in tqdm(data_loader, leave=False):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
             real_targets = torch.ones(mini_batch_size).to(device)
             fake_targets = torch.zeros(mini_batch_size).to(device)
 
+            batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
                 noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
                 fake = generator(noise, labels)
-                predicition_real = discriminator(data, labels).view(-1)
-                predicition_fake = discriminator(fake, labels).view(-1)
-                loss_real = disc_loss(predicition_real, real_targets)
-                loss_fake = disc_loss(predicition_fake, fake_targets)
-                loss_disc = loss_real + loss_fake
+                prediction_real = discriminator(data, labels).view(-1)
+                prediction_fake = discriminator(fake, labels).view(-1)
+                loss_real = disc_loss(prediction_real, real_targets)
+                loss_fake = disc_loss(prediction_fake, fake_targets)
+                loss_disc = (loss_real + loss_fake) * 0.5
+                batch_loss_disc.append(loss_disc.item())
                 discriminator.zero_grad()
                 loss_disc.backward(retain_graph=True)
                 disc_optimizer.step()
+            epoch_loss_disc += np.mean(batch_loss_disc)
 
-        predicition_fake = discriminator(fake, labels).view(-1)
-        loss_gen = gen_loss(predicition_fake, real_targets)
-        generator.zero_grad()
-        loss_gen.backward()
-        gen_optimizer.step()
+            prediction_fake = discriminator(fake, labels).view(-1)
+            loss_gen = gen_loss(prediction_fake, real_targets)
+            epoch_loss_gen += loss_gen.item()
+            generator.zero_grad()
+            loss_gen.backward()
+            gen_optimizer.step()
+
+        writer.add_scalar("train_loss/discriminator", epoch_loss_disc, epoch)
+        writer.add_scalar("train_loss/generator", epoch_loss_gen, epoch)
+
+        if (epoch + 1) % TEST_EVERY == 0:
+            generator.eval()
+            discriminator.eval()
+            epoch_loss_disc = 0
+            epoch_loss_gen = 0
+            accuracy_real = 0.0
+            accuracy_fake = 0.0
+            n_imgs_epoch = 50
+            n_imgs = int(len(data_loader_test.dataset) / TEST_BATCH_SIZE) * n_imgs_epoch
+            imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
+            imgs_real = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
+            for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
+                data, labels = data.to(device), labels.to(device)
+                mini_batch_size = data.shape[0]
+                real_targets = torch.ones(mini_batch_size).to(device)
+                fake_targets = torch.zeros(mini_batch_size).to(device)
+
+                noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
+                fake = generator(noise, labels)
+                prediction_real = discriminator(data, labels).view(-1)
+                prediction_fake = discriminator(fake, labels).view(-1)
+                loss_real = disc_loss(prediction_real, real_targets)
+                loss_fake = disc_loss(prediction_fake, fake_targets)
+                loss_disc = loss_real + loss_fake
+                epoch_loss_disc += loss_disc.item()
+                loss_gen = gen_loss(prediction_fake, real_targets)
+                epoch_loss_gen += loss_gen.item()
+
+                # save random real/fake images
+                random_indexes = np.random.choice(
+                    TEST_BATCH_SIZE, size=n_imgs_epoch, replace=False
+                )
+                start_idx = idx * n_imgs_epoch
+                end_idx = start_idx + n_imgs_epoch
+                imgs_real[start_idx:end_idx] = data[random_indexes]
+                imgs_fake[start_idx:end_idx] = fake[random_indexes]
+
+                # accuracy
+                prediction_fake = prediction_fake >= 0.5
+                prediction_real = prediction_real >= 0.5
+                batch_correct_fake_pred = prediction_fake.eq(fake_targets).sum().item()
+                batch_correct_real_pred = prediction_real.eq(real_targets).sum().item()
+                accuracy_fake += batch_correct_fake_pred
+                accuracy_real += batch_correct_real_pred
+
+            # tracking
+            accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
+            accuracy_real = accuracy_real / len(data_loader_test.dataset)
+            writer.add_scalar("test_loss/discriminator", epoch_loss_disc, epoch)
+            writer.add_scalar("test_loss/generator", epoch_loss_gen, epoch)
+            writer.add_scalar("test_accuracy/real", accuracy_real, epoch)
+            writer.add_scalar("test_accuracy/fake", accuracy_fake, epoch)
+            grid_real = torchvision.utils.make_grid(imgs_real, nrow=16, normalize=True)
+            grid_fake = torchvision.utils.make_grid(imgs_fake, nrow=16, normalize=True)
+            writer.add_image("real", grid_real, epoch)
+            writer.add_image("fake", grid_fake, epoch)
+
+        if (epoch + 1) % SAVE_EVERY == 0:
+            torch.save(generator.state_dict(), gen_dir)
+            torch.save(discriminator.state_dict(), disc_dir)
 
 
 def read_config(_input):
@@ -139,14 +218,22 @@ def read_config(_input):
         print("Train model using %s as configuration file." % (_input[1]))
         path_config = working_dir / Path("{}".format(_input[1]))
 
-    global experiments_dir, models_dir
+    global experiments_dir, gen_dir, disc_dir
     experiments_dir = (
         working_dir / Path("experiments/" + path_config.stem) / Path(unique_key)
     )
-    models_dir = (
-        working_dir / Path("models/" + path_config.stem) / Path(unique_key + ".pt")
+    gen_dir = (
+        working_dir
+        / Path("models/" + path_config.stem)
+        / Path(unique_key)
+        / Path("gen.pt")
     )
-
+    disc_dir = (
+        working_dir
+        / Path("models/" + path_config.stem)
+        / Path(unique_key)
+        / Path("disc.pt")
+    )
     if path_config.suffix != ".yaml":
         print("Make sure that the configuration file is a .yaml file.")
         sys.exit(1)
@@ -176,8 +263,11 @@ def read_config(_input):
         config_training = (
             batch_size,
             test_batch_size,
+            test_every,
+            save_every,
             epochs,
-            lr,
+            gen_lr,
+            disc_lr,
             gamma,
             cuda,
             seed,
@@ -195,8 +285,11 @@ def read_config(_input):
         assert type(embedding_dim) == int
         assert type(batch_size) == int
         assert type(test_batch_size) == int
+        assert type(test_every) == int
+        assert type(save_every) == int
         assert type(epochs) == int
-        assert type(lr) == float
+        assert type(gen_lr) == float
+        assert type(disc_lr) == float
         assert type(gamma) == float
         assert type(cuda) == bool
         assert type(seed) == int
@@ -218,8 +311,11 @@ def read_config(_input):
             "training:\n"
             "    batch_size: int\n"
             "    test_batch_size: int\n"
+            "    test_every: int\n"
+            "    save_every: int\n"
             "    epochs: int\n"
-            "    lr: float\n"
+            "    gen_lr: float\n"
+            "    disc_lr: float\n"
             "    gamma: float\n"
             "    cuda: bool\n"
             "    seed: int"

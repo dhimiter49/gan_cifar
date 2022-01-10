@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 working_dir = Path(__file__).parent.parent.absolute()
-export_img_dir = working_dir / Path("dataset") / Path("cifar10_iamges")
+export_img_dir = working_dir / Path("dataset") / Path("cifar10_images")
 
 
 def main():

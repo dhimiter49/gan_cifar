@@ -77,7 +77,6 @@ def main():
         ]
     )
 
-    # Read CIFAR10 data and apply transformation
     cifar10_dataset = torchvision.datasets.CIFAR10(
         root="./dataset", train=True, download=True, transform=trans
     )

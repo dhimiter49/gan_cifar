@@ -3,9 +3,6 @@ dataset:
     channels_img: 3
     num_classes: 10
 
-# Nets: 
-# Generator: Generator, DCGAN_4x4_Generator
-# Discriminator: DCGAN_Discriminator, WGAN_Discriminator, WGAN-GP_Discriminator
 nets:
     generator_model: DCGAN_Generator
     discriminator_model: DCGAN_Discriminator
@@ -23,12 +20,10 @@ training:
     gen_lr: 0.002
     disc_lr: 0.0002
     gamma: 0.5
-    cuda: True # disable cuda if needed
+    cuda: True
     seed: 0
     disc_iterations: 1
-    weight_clip: 0.0  #WGAN
-    lambda_gp: 0  #WGAN-GP
-
-    # Losses: BCELoss, ExpSigmaLoss, WassersteinLoss
+    weight_clip: 0.0
+    lambda_gp: 0
     gen_loss: BCELoss
     disc_loss: BCELoss

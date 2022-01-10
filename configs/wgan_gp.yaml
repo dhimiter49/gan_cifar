@@ -7,7 +7,7 @@ dataset:
 # Generator: Generator, DCGAN_4x4_Generator
 # Discriminator: DCGAN_Discriminator, WGAN_Discriminator, WGAN-GP_Discriminator
 nets:
-    generator_model: Generator
+    generator_model: DCGAN_Generator
     discriminator_model: WGAN_GP_Discriminator
     disc_features: 16
     gen_features: 16

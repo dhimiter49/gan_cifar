@@ -12,7 +12,10 @@ from torch.utils.tensorboard import SummaryWriter
 from pytorch_gan_metrics import get_inception_score_and_fid
 import yaml
 
-from nets import Discriminator, Generator, initialize_weights
+import nets 
+
+from utils import gradient_penalty, initialize_weights
+
 import losses
 
 import os
@@ -36,6 +39,8 @@ def main():
         IMG_SIZE,
         CHANNELS_IMG,
         NUM_CLASSES,
+        GENERATOR_MODEL,
+        DISCRIMINATOR_MODEL,
         DISC_FEATURES,
         GEN_FEATURES,
         LATENT_DIM,
@@ -51,10 +56,14 @@ def main():
         CUDA,
         SEED,
         DISC_ITERATIONS,
+        WEIGHT_CLIP,
+        LAMBDA_GP,
         GEN_LOSS_STR,
         DISC_LOSS_STR,
     ) = read_config(sys.argv)
 
+
+    
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
     Path(gen_dir.parent).mkdir(parents=True, exist_ok=True)
     open(gen_dir, "w+")
@@ -94,10 +103,11 @@ def main():
     gen_loss = getattr(losses, GEN_LOSS_STR)()
     disc_loss = getattr(losses, DISC_LOSS_STR)()
 
-    generator = Generator(
+    generator = getattr(nets, GENERATOR_MODEL)(
         LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM
     ).to(device)
-    discriminator = Discriminator(
+
+    discriminator = getattr(nets, DISCRIMINATOR_MODEL)(
         CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
     ).to(device)
 
@@ -121,8 +131,14 @@ def main():
         for (data, labels) in tqdm(data_loader, leave=False):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
-            real_targets = torch.ones(mini_batch_size).to(device)
-            fake_targets = torch.zeros(mini_batch_size).to(device)
+
+        
+            if GEN_LOSS_STR == 'BCELoss' and DISC_LOSS_STR == 'BCELoss':
+                real_targets = torch.ones(mini_batch_size).to(device)
+                fake_targets = torch.zeros(mini_batch_size).to(device)
+            elif GEN_LOSS_STR == 'WassersteinLoss' and DISC_LOSS_STR == 'WassersteinLoss':
+                real_targets = -torch.ones(mini_batch_size).to(device)
+                fake_targets = torch.ones(mini_batch_size).to(device) 
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
@@ -132,11 +148,23 @@ def main():
                 prediction_fake = discriminator(fake, labels).view(-1)
                 loss_real = disc_loss(prediction_real, real_targets)
                 loss_fake = disc_loss(prediction_fake, fake_targets)
-                loss_disc = (loss_real + loss_fake) * 0.5
+
+                gp = 0.0
+                if (LAMBDA_GP != 0):
+                    print('GP!')
+                    gp = gradient_penalty(discriminator, labels, data, fake, device=device)
+
+                loss_disc = (loss_real + loss_fake) + LAMBDA_GP * gp
                 batch_loss_disc.append(loss_disc.item())
                 discriminator.zero_grad()
                 loss_disc.backward(retain_graph=True)
                 disc_optimizer.step()
+
+                if(WEIGHT_CLIP != 0.0):
+                    print('Weight clip!')
+                    for p in discriminator.parameters():
+                        p.data.clamp_(-WEIGHT_CLIP, WEIGHT_CLIP)
+
             epoch_loss_disc += np.mean(batch_loss_disc)
 
             prediction_fake = discriminator(fake, labels).view(-1)
@@ -272,6 +300,8 @@ def read_config(_input):
         ) = list(config["dataset"].values())
 
         config_model = (
+            generator_model,
+            discriminator_model,
             disc_features,
             gen_features,
             latent_dim,
@@ -290,6 +320,8 @@ def read_config(_input):
             cuda,
             seed,
             disc_iterations,
+            weight_clip,
+            lambda_gp,
             gen_loss,
             disc_loss,
         ) = list(config["training"].values())
@@ -297,6 +329,8 @@ def read_config(_input):
         assert type(img_size) == int
         assert type(channels_img) == int
         assert type(num_classes) == int
+        assert type(generator_model) == str
+        assert type(discriminator_model) == str
         assert type(disc_features) == int
         assert type(gen_features) == int
         assert type(latent_dim) == int
@@ -311,6 +345,9 @@ def read_config(_input):
         assert type(gamma) == float
         assert type(cuda) == bool
         assert type(seed) == int
+        assert type(disc_iterations) == int
+        assert type(weight_clip) == float
+        assert type(lambda_gp) == int
         assert type(gen_loss) == str
         assert type(disc_loss) == str
     except (AssertionError, ValueError, KeyError) as e:

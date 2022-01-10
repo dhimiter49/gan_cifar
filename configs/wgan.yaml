@@ -7,8 +7,8 @@ dataset:
 # Generator: DCGAN_Generator, WGAN_Generator, WGAN-GP_Generator
 # Discriminator: DCGAN_Discriminator, WGAN_Discriminator, WGAN-GP_Discriminator
 nets:
-    generator: DCGAN_Generator
-    discriminator: DCGAN_Discriminator
+    generator_model: WGAN_Generator
+    discriminator_model: WGAN_Discriminator
     disc_features: 16
     gen_features: 16
     latent_dim: 128
@@ -20,15 +20,15 @@ training:
     test_every: 10
     save_every: 50
     epochs: 1000
-    gen_lr: 0.001 
-    disc_lr: 0.0001 
+    gen_lr: 0.00005  
+    disc_lr: 0.00005  
     gamma: 0.5
     cuda: True # disable cuda if needed
     seed: 0
-    disc_iterations: 1
-    weight_clip: 0.0  #WGAN
-    lambda_gp: 0  #WGAN-GP
+    disc_iterations: 5
+    weight_clip: 0.01  
+    lambda_gp: 0  
 
     # Losses: BCELoss, ExpSigmaLoss, WassersteinLoss
-    gen_loss: BCELoss
-    disc_loss: BCELoss
+    gen_loss: WassersteinLoss
+    disc_loss: WassersteinLoss

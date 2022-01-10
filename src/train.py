@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 from pytorch_gan_metrics import get_inception_score_and_fid
 import yaml
 
-from nets import Discriminator, Generator
+from nets import Discriminator, Generator, initialize_weights
 import losses
 
 import os
@@ -100,6 +100,9 @@ def main():
     discriminator = Discriminator(
         CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
     ).to(device)
+
+    initialize_weights(generator)
+    initialize_weights(discriminator)
 
     writer = SummaryWriter(experiments_dir)
 

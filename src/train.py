@@ -143,10 +143,11 @@ def main():
             loss_gen.backward()
             gen_optimizer.step()
 
-        writer.add_scalar("train_loss/discriminator", epoch_loss_disc, epoch)
-        writer.add_scalar("train_loss/generator", epoch_loss_gen, epoch)
+        step = epoch + 1
+        writer.add_scalar("train_loss/discriminator", np.mean(epoch_loss_disc), step)
+        writer.add_scalar("train_loss/generator", np.mean(epoch_loss_gen), step)
 
-        if (epoch + 1) % TEST_EVERY == 0:
+        if step % TEST_EVERY == 0:
             generator.eval()
             discriminator.eval()
             epoch_loss_disc = 0
@@ -203,21 +204,21 @@ def main():
                 accuracy_real += batch_correct_real_pred
 
             # tracking
-            writer.add_scalar("test_loss/discriminator", epoch_loss_disc, epoch)
-            writer.add_scalar("test_loss/generator", epoch_loss_gen, epoch)
+            writer.add_scalar("test_loss/discriminator", np.mean(epoch_loss_disc), step)
+            writer.add_scalar("test_loss/generator", np.mean(epoch_loss_gen), step)
             accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
             accuracy_real = accuracy_real / len(data_loader_test.dataset)
-            writer.add_scalar("test_accuracy/real", accuracy_real, epoch)
-            writer.add_scalar("test_accuracy/fake", accuracy_fake, epoch)
-            writer.add_scalar("evaluation/inception_score", incep_score, epoch)
-            writer.add_scalar("evaluation/inception_std", incep_score_std, epoch)
-            writer.add_scalar("evaluation/test_frechet_distance", frechet_distance, epoch)
+            writer.add_scalar("test_accuracy/real", accuracy_real, step)
+            writer.add_scalar("test_accuracy/fake", accuracy_fake, step)
+            writer.add_scalar("evaluation/inception_score", incep_score, step)
+            writer.add_scalar("evaluation/inception_std", incep_score_std, step)
+            writer.add_scalar("evaluation/frechet_distance", frechet_distance, step)
             grid_real = torchvision.utils.make_grid(imgs_real, nrow=16, normalize=True)
             grid_fake = torchvision.utils.make_grid(imgs_fake, nrow=16, normalize=True)
-            writer.add_image("real", grid_real, epoch)
-            writer.add_image("fake", grid_fake, epoch)
+            writer.add_image("real", grid_real, step)
+            writer.add_image("fake", grid_fake, step)
 
-        if (epoch + 1) % SAVE_EVERY == 0:
+        if step % SAVE_EVERY == 0:
             torch.save(generator.state_dict(), gen_dir)
             torch.save(discriminator.state_dict(), disc_dir)
 

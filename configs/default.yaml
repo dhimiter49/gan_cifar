@@ -4,11 +4,11 @@ dataset:
     num_classes: 10
 
 # Nets: 
-# Generator: DCGAN_Generator, WGAN_Generator, WGAN-GP_Generator
+# Generator: Generator, DCGAN_4x4_Generator
 # Discriminator: DCGAN_Discriminator, WGAN_Discriminator, WGAN-GP_Discriminator
 nets:
-    generator: DCGAN_Generator
-    discriminator: DCGAN_Discriminator
+    generator_model: Generator
+    discriminator_model: DCGAN_Discriminator
     disc_features: 16
     gen_features: 16
     latent_dim: 128

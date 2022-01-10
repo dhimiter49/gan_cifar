@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-
 class Generator(nn.Module):
     def __init__(
         self,
@@ -64,6 +63,7 @@ class Generator(nn.Module):
         noise = torch.cat([noise, embedding], dim=1)
         return self.model(noise)
 
+
 class DCGAN_4x4_Generator(nn.Module):
     def __init__(
         self,
@@ -77,7 +77,7 @@ class DCGAN_4x4_Generator(nn.Module):
         super().__init__()
         layers = [
             nn.ConvTranspose2d(
-                latent_dim + int(embedding_dim / (4*4)),
+                latent_dim + int(embedding_dim / (4 * 4)),
                 gen_features * 8,
                 kernel_size=4,
                 stride=1,
@@ -119,11 +119,16 @@ class DCGAN_4x4_Generator(nn.Module):
         self.model = nn.Sequential(*layers)
         self.embed = nn.Embedding(num_classes, embedding_dim)
         self.embedding_dim = embedding_dim
+
     def forward(self, noise, labels):
         embedding = self.embed(labels).unsqueeze(2).unsqueeze(3)
-        embedding = torch.reshape(embedding, (embedding.shape[0], int(self.embedding_dim / (4*4))) + noise.shape[2:])
+        embedding = torch.reshape(
+            embedding,
+            (embedding.shape[0], int(self.embedding_dim / (4 * 4))) + noise.shape[2:],
+        )
         noise = torch.cat([noise, embedding], dim=1)
         return self.model(noise)
+
 
 # Discriminators
 # DCGAN
@@ -225,6 +230,7 @@ class WGAN_Discriminator(nn.Module):
         )
         noise = torch.cat([noise, embedding], dim=1)
         return self.model(noise)
+
 
 ## WGAN-GP
 class WGAN_GP_Discriminator(nn.Module):

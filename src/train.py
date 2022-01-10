@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 from pytorch_gan_metrics import get_inception_score_and_fid
 import yaml
 
-import nets 
+import nets
 
 from utils import gradient_penalty, initialize_weights
 
@@ -62,8 +62,6 @@ def main():
         DISC_LOSS_STR,
     ) = read_config(sys.argv)
 
-
-    
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
     Path(gen_dir.parent).mkdir(parents=True, exist_ok=True)
     open(gen_dir, "w+")
@@ -125,10 +123,9 @@ def main():
 
     real_factor = 1
     fake_factor = 0
-    if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == 'WassersteinLoss':
+    if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
         real_factor = -1
         fake_factor = 1
-
 
     for epoch in tqdm(range(EPOCHS)):
         generator.train()
@@ -140,7 +137,7 @@ def main():
             mini_batch_size = data.shape[0]
 
             real_targets = real_factor * torch.ones(mini_batch_size).to(device)
-            fake_targets = fake_factor * torch.ones(mini_batch_size).to(device) 
+            fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
@@ -152,8 +149,10 @@ def main():
                 loss_fake = disc_loss(prediction_fake, fake_targets)
 
                 gp = 0.0
-                if (LAMBDA_GP != 0):
-                    gp = gradient_penalty(discriminator, labels, data, fake, device=device)
+                if LAMBDA_GP != 0:
+                    gp = gradient_penalty(
+                        discriminator, labels, data, fake, device=device
+                    )
 
                 loss_disc = (loss_real + loss_fake) + LAMBDA_GP * gp
                 batch_loss_disc.append(loss_disc.item())
@@ -161,7 +160,7 @@ def main():
                 loss_disc.backward(retain_graph=True)
                 disc_optimizer.step()
 
-                if(WEIGHT_CLIP != 0.0):
+                if WEIGHT_CLIP != 0.0:
                     for p in discriminator.parameters():
                         p.data.clamp_(-WEIGHT_CLIP, WEIGHT_CLIP)
 
@@ -242,7 +241,9 @@ def main():
             writer.add_scalar("test_accuracy/fake", accuracy_fake, epoch)
             writer.add_scalar("evaluation/inception_score", incep_score, epoch)
             writer.add_scalar("evaluation/inception_std", incep_score_std, epoch)
-            writer.add_scalar("evaluation/test_frechet_distance", frechet_distance, epoch)
+            writer.add_scalar(
+                "evaluation/test_frechet_distance", frechet_distance, epoch
+            )
             grid_real = torchvision.utils.make_grid(imgs_real, nrow=16, normalize=True)
             grid_fake = torchvision.utils.make_grid(imgs_fake, nrow=16, normalize=True)
             writer.add_image("real", grid_real, epoch)

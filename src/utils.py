@@ -19,9 +19,10 @@ def gradient_penalty(discriminator, labels, data, fake, device="cpu"):
         retain_graph=True,
     )[0]
     gradient = gradient.view(gradient.shape[0], -1)
-    gradient_norm = gradient.norm(2, dim=1) #l2 norm
+    gradient_norm = gradient.norm(2, dim=1)  # l2 norm
     gradient_penalty = torch.mean((gradient_norm - 1) ** 2)
     return gradient_penalty
+
 
 # weight initilization
 def initialize_weights(model):
@@ -29,4 +30,3 @@ def initialize_weights(model):
     for m in model.modules():
         if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.BatchNorm2d)):
             nn.init.normal_(m.weight.data, 0.0, 0.02)
-

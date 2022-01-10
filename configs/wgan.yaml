@@ -4,7 +4,7 @@ dataset:
     num_classes: 10
 
 # Nets: 
-# Generator: DCGAN_Generator, WGAN_Generator, WGAN-GP_Generator
+# Generator: Generator, DCGAN_4x4_Generator
 # Discriminator: DCGAN_Discriminator, WGAN_Discriminator, WGAN-GP_Discriminator
 nets:
     generator_model: Generator

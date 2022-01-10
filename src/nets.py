@@ -3,8 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-## DCGAN
-class DCGAN_Generator(nn.Module):
+
+class Generator(nn.Module):
     def __init__(
         self,
         latent_dim,
@@ -64,7 +64,69 @@ class DCGAN_Generator(nn.Module):
         noise = torch.cat([noise, embedding], dim=1)
         return self.model(noise)
 
+class DCGAN_4x4_Generator(nn.Module):
+    def __init__(
+        self,
+        latent_dim,
+        channels_img,
+        gen_features,
+        num_classes,
+        img_size,
+        embedding_dim,
+    ):
+        super().__init__()
+        layers = [
+            nn.ConvTranspose2d(
+                latent_dim + int(embedding_dim / (4*4)),
+                gen_features * 8,
+                kernel_size=4,
+                stride=1,
+                padding=0,
+                bias=False,
+            ),
+            nn.BatchNorm2d(gen_features * 8),
+            nn.LeakyReLU(),
+            nn.ConvTranspose2d(
+                gen_features * 8,
+                gen_features * 4,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
+            ),
+            nn.BatchNorm2d(gen_features * 4),
+            nn.LeakyReLU(),
+            nn.ConvTranspose2d(
+                gen_features * 4,
+                gen_features * 2,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
+            ),
+            nn.BatchNorm2d(gen_features * 2),
+            nn.LeakyReLU(),
+            nn.ConvTranspose2d(
+                gen_features * 2,
+                channels_img,
+                kernel_size=7,
+                stride=1,
+                padding=1,
+                bias=False,
+            ),
+            nn.Tanh(),
+        ]
+        self.model = nn.Sequential(*layers)
+        self.embed = nn.Embedding(num_classes, embedding_dim)
+        self.embedding_dim = embedding_dim
+    def forward(self, noise, labels):
+        embedding = self.embed(labels).unsqueeze(2).unsqueeze(3)
+        embedding = torch.reshape(embedding, (embedding.shape[0], int(self.embedding_dim / (4*4))) + noise.shape[2:])
+        noise = torch.cat([noise, embedding], dim=1)
+        return self.model(noise)
 
+# Discriminators
+# DCGAN
 class DCGAN_Discriminator(nn.Module):
     def __init__(self, channels_img, disc_features, num_classes, img_size):
         super().__init__()
@@ -116,67 +178,6 @@ class DCGAN_Discriminator(nn.Module):
 
 
 ## WGAN
-class WGAN_Generator(nn.Module):
-    def __init__(
-        self,
-        latent_dim,
-        channels_img,
-        gen_features,
-        num_classes,
-        img_size,
-        embedding_dim,
-    ):
-        super().__init__()
-        layers = [
-            nn.ConvTranspose2d(
-                latent_dim + embedding_dim,
-                gen_features * 8,
-                kernel_size=4,
-                stride=1,
-                padding=0,
-                bias=False,
-            ),
-            nn.BatchNorm2d(gen_features * 8),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(
-                gen_features * 8,
-                gen_features * 4,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.BatchNorm2d(gen_features * 4),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(
-                gen_features * 4,
-                gen_features * 2,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.BatchNorm2d(gen_features * 2),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(
-                gen_features * 2,
-                channels_img,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.Tanh(),
-        ]
-        self.model = nn.Sequential(*layers)
-        self.embed = nn.Embedding(num_classes, embedding_dim)
-
-    def forward(self, noise, labels):
-        embedding = self.embed(labels).unsqueeze(2).unsqueeze(3)
-        noise = torch.cat([noise, embedding], dim=1)
-        return self.model(noise)
-
-
 class WGAN_Discriminator(nn.Module):
     def __init__(self, channels_img, disc_features, num_classes, img_size):
         super().__init__()
@@ -226,67 +227,6 @@ class WGAN_Discriminator(nn.Module):
         return self.model(noise)
 
 ## WGAN-GP
-class WGAN_GP_Generator(nn.Module):
-    def __init__(
-        self,
-        latent_dim,
-        channels_img,
-        gen_features,
-        num_classes,
-        img_size,
-        embedding_dim,
-    ):
-        super().__init__()
-        layers = [
-            nn.ConvTranspose2d(
-                latent_dim + embedding_dim,
-                gen_features * 8,
-                kernel_size=4,
-                stride=1,
-                padding=0,
-                bias=False,
-            ),
-            nn.BatchNorm2d(gen_features * 8),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(
-                gen_features * 8,
-                gen_features * 4,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.BatchNorm2d(gen_features * 4),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(
-                gen_features * 4,
-                gen_features * 2,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.BatchNorm2d(gen_features * 2),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(
-                gen_features * 2,
-                channels_img,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.Tanh(),
-        ]
-        self.model = nn.Sequential(*layers)
-        self.embed = nn.Embedding(num_classes, embedding_dim)
-
-    def forward(self, noise, labels):
-        embedding = self.embed(labels).unsqueeze(2).unsqueeze(3)
-        noise = torch.cat([noise, embedding], dim=1)
-        return self.model(noise)
-
-
 class WGAN_GP_Discriminator(nn.Module):
     def __init__(self, channels_img, disc_features, num_classes, img_size):
         super().__init__()

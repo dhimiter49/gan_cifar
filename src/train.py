@@ -123,6 +123,13 @@ def main():
         discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
     )
 
+    real_factor = 1
+    fake_factor = 0
+    if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == 'WassersteinLoss':
+        real_factor = -1
+        fake_factor = 1
+
+
     for epoch in tqdm(range(EPOCHS)):
         generator.train()
         discriminator.train()
@@ -132,13 +139,8 @@ def main():
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
 
-        
-            if GEN_LOSS_STR == 'BCELoss' and DISC_LOSS_STR == 'BCELoss':
-                real_targets = torch.ones(mini_batch_size).to(device)
-                fake_targets = torch.zeros(mini_batch_size).to(device)
-            elif GEN_LOSS_STR == 'WassersteinLoss' and DISC_LOSS_STR == 'WassersteinLoss':
-                real_targets = -torch.ones(mini_batch_size).to(device)
-                fake_targets = torch.ones(mini_batch_size).to(device) 
+            real_targets = real_factor * torch.ones(mini_batch_size).to(device)
+            fake_targets = fake_factor * torch.ones(mini_batch_size).to(device) 
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
@@ -151,7 +153,6 @@ def main():
 
                 gp = 0.0
                 if (LAMBDA_GP != 0):
-                    print('GP!')
                     gp = gradient_penalty(discriminator, labels, data, fake, device=device)
 
                 loss_disc = (loss_real + loss_fake) + LAMBDA_GP * gp
@@ -161,7 +162,6 @@ def main():
                 disc_optimizer.step()
 
                 if(WEIGHT_CLIP != 0.0):
-                    print('Weight clip!')
                     for p in discriminator.parameters():
                         p.data.clamp_(-WEIGHT_CLIP, WEIGHT_CLIP)
 

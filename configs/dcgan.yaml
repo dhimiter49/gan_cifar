@@ -7,7 +7,7 @@ dataset:
 # Generator: DCGAN_Generator, WGAN_Generator, WGAN-GP_Generator
 # Discriminator: DCGAN_Discriminator, WGAN_Discriminator, WGAN-GP_Discriminator
 nets:
-    generator: DCGAN_Generator
+    generator: DCGAN_4x4_Generator
     discriminator: DCGAN_Discriminator
     disc_features: 16
     gen_features: 16
@@ -20,8 +20,8 @@ training:
     test_every: 10
     save_every: 50
     epochs: 1000
-    gen_lr: 0.001 
-    disc_lr: 0.0001 
+    gen_lr: 0.002
+    disc_lr: 0.0002
     gamma: 0.5
     cuda: True # disable cuda if needed
     seed: 0

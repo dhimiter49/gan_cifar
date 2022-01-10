@@ -29,11 +29,3 @@ class WassersteinLoss(nn.Module):
 
     def forward(self, prediction: torch.Tensor, target: torch.Tensor):
         return (target * prediction).mean()
-
-class WassersteinLoss_with_GP(nn.Module):
-    def __init__(self):
-        super().__init__()
-        pass
-
-    def forward(self, prediction: torch.Tensor, target: torch.Tensor):
-        return (target * prediction).mean()

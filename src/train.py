@@ -83,6 +83,8 @@ def main():
     cifar10_dataset_test = torchvision.datasets.CIFAR10(
         root="./dataset", train=False, download=True, transform=trans
     )
+    N_TRAIN_DATA = len(cifar10_dataset)
+    N_TEST_DATA = len(cifar10_dataset_test)
 
     data_loader = torch.utils.data.DataLoader(
         cifar10_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4
@@ -143,10 +145,13 @@ def main():
             loss_gen.backward()
             gen_optimizer.step()
 
-        writer.add_scalar("train_loss/discriminator", epoch_loss_disc, epoch)
-        writer.add_scalar("train_loss/generator", epoch_loss_gen, epoch)
+        step = epoch + 1
+        epoch_loss_disc = epoch_loss_disc / N_TRAIN_DATA
+        epoch_loss_gen = epoch_loss_gen / N_TRAIN_DATA
+        writer.add_scalar("train_loss/discriminator", epoch_loss_disc, step)
+        writer.add_scalar("train_loss/generator", epoch_loss_gen, step)
 
-        if (epoch + 1) % TEST_EVERY == 0:
+        if step % TEST_EVERY == 0:
             generator.eval()
             discriminator.eval()
             epoch_loss_disc = 0
@@ -157,7 +162,7 @@ def main():
             incep_score_std = 0.0
             frechet_distance = 0.0
             n_imgs_epoch = 50
-            n_imgs = int(len(data_loader_test.dataset) / TEST_BATCH_SIZE) * n_imgs_epoch
+            n_imgs = int(N_TEST_DATA / TEST_BATCH_SIZE) * n_imgs_epoch
             imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             imgs_real = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
@@ -203,21 +208,26 @@ def main():
                 accuracy_real += batch_correct_real_pred
 
             # tracking
-            writer.add_scalar("test_loss/discriminator", epoch_loss_disc, epoch)
-            writer.add_scalar("test_loss/generator", epoch_loss_gen, epoch)
-            accuracy_fake = accuracy_fake / len(data_loader_test.dataset)
-            accuracy_real = accuracy_real / len(data_loader_test.dataset)
-            writer.add_scalar("test_accuracy/real", accuracy_real, epoch)
-            writer.add_scalar("test_accuracy/fake", accuracy_fake, epoch)
-            writer.add_scalar("evaluation/inception_score", incep_score, epoch)
-            writer.add_scalar("evaluation/inception_std", incep_score_std, epoch)
-            writer.add_scalar("evaluation/test_frechet_distance", frechet_distance, epoch)
+            epoch_loss_disc = epoch_loss_disc / N_TEST_DATA
+            epoch_loss_gen = epoch_loss_gen / N_TEST_DATA
+            accuracy_fake = accuracy_fake / N_TEST_DATA
+            accuracy_real = accuracy_real / N_TEST_DATA
+            incep_score = incep_score / (N_TEST_DATA / TEST_BATCH_SIZE)
+            incep_score_std = incep_score_std / (N_TEST_DATA / TEST_BATCH_SIZE)
+            frechet_distance = frechet_distance / (N_TEST_DATA / TEST_BATCH_SIZE)
+            writer.add_scalar("test_loss/discriminator", epoch_loss_disc, step)
+            writer.add_scalar("test_loss/generator", epoch_loss_gen, step)
+            writer.add_scalar("test_accuracy/real", accuracy_real, step)
+            writer.add_scalar("test_accuracy/fake", accuracy_fake, step)
+            writer.add_scalar("evaluation/inception_score", incep_score, step)
+            writer.add_scalar("evaluation/inception_std", incep_score_std, step)
+            writer.add_scalar("evaluation/test_frechet_distance", frechet_distance, step)
             grid_real = torchvision.utils.make_grid(imgs_real, nrow=16, normalize=True)
             grid_fake = torchvision.utils.make_grid(imgs_fake, nrow=16, normalize=True)
-            writer.add_image("real", grid_real, epoch)
-            writer.add_image("fake", grid_fake, epoch)
+            writer.add_image("real", grid_real, step)
+            writer.add_image("fake", grid_fake, step)
 
-        if (epoch + 1) % SAVE_EVERY == 0:
+        if step % SAVE_EVERY == 0:
             torch.save(generator.state_dict(), gen_dir)
             torch.save(discriminator.state_dict(), disc_dir)
 

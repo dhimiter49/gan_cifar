@@ -10,7 +10,7 @@ nets:
     embedding_dim: 16
 
 training:
-    batch_size: 1000
+    batch_size: 128
     test_batch_size: 1000
     test_every: 10
     save_every: 50

@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 from pathlib import Path
 import numpy as np
 import torch
@@ -125,8 +124,8 @@ def main():
     for epoch in tqdm(range(EPOCHS)):
         generator.train()
         discriminator.train()
-        epoch_loss_disc = 0
-        epoch_loss_gen = 0
+        epoch_loss_disc = 0.0
+        epoch_loss_gen = 0.0
         for (data, labels) in tqdm(data_loader, leave=False):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
@@ -175,14 +174,15 @@ def main():
         if step % TEST_EVERY == 0:
             generator.eval()
             discriminator.eval()
-            epoch_loss_disc = 0
-            epoch_loss_gen = 0
+            epoch_loss_disc = 0.0
+            epoch_loss_gen = 0.0
             accuracy_real = 0.0
             accuracy_fake = 0.0
             incep_score = 0.0
             incep_score_std = 0.0
             frechet_distance = 0.0
             n_imgs_epoch = 50
+            all_fakes = torch.zeros(N_TEST_DATA, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             n_imgs = int(N_TEST_DATA / TEST_BATCH_SIZE) * n_imgs_epoch
             imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             imgs_real = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)

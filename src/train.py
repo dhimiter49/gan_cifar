@@ -202,14 +202,7 @@ def main():
                 epoch_loss_disc += loss_disc.item()
                 loss_gen = gen_loss(prediction_fake, real_targets)
                 epoch_loss_gen += loss_gen.item()
-
-                # inception score and frechet inception distance
-                (i_s, i_s_std), fid = get_inception_score_and_fid(
-                    fake / 2 + 0.5, working_dir / Path("dataset/cifar10_fid_stats.npz")
-                )
-                incep_score += i_s
-                incep_score_std += i_s_std
-                frechet_distance += fid
+                all_fakes[idx * TEST_BATCH_SIZE : (idx + 1) * TEST_BATCH_SIZE] = fake
 
                 # save random real/fake images
                 random_indexes = np.random.choice(
@@ -228,14 +221,19 @@ def main():
                 accuracy_fake += batch_correct_fake_pred
                 accuracy_real += batch_correct_real_pred
 
+            # inception score and frechet inception distance
+            (
+                incep_score,
+                incep_score_std,
+            ), frechet_distance = get_inception_score_and_fid(
+                all_fakes / 2 + 0.5, working_dir / Path("dataset/cifar10_fid_stats.npz")
+            )
+
             # tracking
             epoch_loss_disc = epoch_loss_disc / N_TEST_DATA
             epoch_loss_gen = epoch_loss_gen / N_TEST_DATA
             accuracy_fake = accuracy_fake / N_TEST_DATA
             accuracy_real = accuracy_real / N_TEST_DATA
-            incep_score = incep_score / (N_TEST_DATA / TEST_BATCH_SIZE)
-            incep_score_std = incep_score_std / (N_TEST_DATA / TEST_BATCH_SIZE)
-            frechet_distance = frechet_distance / (N_TEST_DATA / TEST_BATCH_SIZE)
             writer.add_scalar("test_loss/discriminator", epoch_loss_disc, step)
             writer.add_scalar("test_loss/generator", epoch_loss_gen, step)
             writer.add_scalar("test_accuracy/real", accuracy_real, step)

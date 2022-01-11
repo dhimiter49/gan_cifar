@@ -130,8 +130,6 @@ class DCGAN_4x4_Generator(nn.Module):
         return self.model(noise)
 
 
-# Discriminators
-# DCGAN
 class DCGAN_Discriminator(nn.Module):
     def __init__(self, channels_img, disc_features, num_classes, img_size):
         super().__init__()
@@ -182,7 +180,6 @@ class DCGAN_Discriminator(nn.Module):
         return self.model(noise)
 
 
-## WGAN
 class WGAN_Discriminator(nn.Module):
     def __init__(self, channels_img, disc_features, num_classes, img_size):
         super().__init__()
@@ -216,56 +213,6 @@ class WGAN_Discriminator(nn.Module):
                 bias=False,
             ),
             nn.BatchNorm2d(disc_features * 4),
-            nn.LeakyReLU(0.2),
-            nn.Conv2d(
-                disc_features * 4, 1, kernel_size=4, stride=1, padding=0, bias=False
-            ),
-        ]
-        self.model = nn.Sequential(*layers)
-        self.embed = nn.Embedding(num_classes, img_size * img_size)
-
-    def forward(self, noise, labels):
-        embedding = self.embed(labels).view(
-            labels.shape[0], 1, self.img_size, self.img_size
-        )
-        noise = torch.cat([noise, embedding], dim=1)
-        return self.model(noise)
-
-
-## WGAN-GP
-class WGAN_GP_Discriminator(nn.Module):
-    def __init__(self, channels_img, disc_features, num_classes, img_size):
-        super().__init__()
-        self.img_size = img_size
-        layers = [
-            nn.Conv2d(
-                channels_img + 1,
-                disc_features,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.LeakyReLU(0.2),
-            nn.Conv2d(
-                disc_features,
-                disc_features * 2,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.InstanceNorm2d(disc_features * 2),
-            nn.LeakyReLU(0.2),
-            nn.Conv2d(
-                disc_features * 2,
-                disc_features * 4,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.InstanceNorm2d(disc_features * 4),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 4, 1, kernel_size=4, stride=1, padding=0, bias=False

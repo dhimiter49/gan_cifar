@@ -42,7 +42,6 @@ def main():
         EPOCHS,
         GEN_LR,
         DISC_LR,
-        GAMMA,
         CUDA,
         SEED,
         DISC_ITERATIONS,

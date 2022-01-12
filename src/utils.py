@@ -104,7 +104,6 @@ def read_config(_input):
             epochs,
             gen_lr,
             disc_lr,
-            gamma,
             cuda,
             seed,
             disc_iterations,
@@ -130,7 +129,6 @@ def read_config(_input):
         assert type(epochs) == int
         assert type(gen_lr) == float
         assert type(disc_lr) == float
-        assert type(gamma) == float
         assert type(cuda) == bool
         assert type(seed) == int
         assert type(disc_iterations) == int
@@ -147,6 +145,8 @@ def read_config(_input):
             "    channels_img: int\n"
             "    num_classes: int\n"
             "nets:\n"
+            "    generator_model: str\n"
+            "    discriminator_model: str\n"
             "    disc_features: int\n"
             "    gen_features: int\n"
             "    latent_dims: int\n"
@@ -159,9 +159,11 @@ def read_config(_input):
             "    epochs: int\n"
             "    gen_lr: float\n"
             "    disc_lr: float\n"
-            "    gamma: float\n"
             "    cuda: bool\n"
             "    seed: int"
+            "    disc_iterations: int"
+            "    weight_clip: float"
+            "    lambda_gp: int"
             "    gen_loss: str"
             "    disc_loss: str"
         )

@@ -91,9 +91,6 @@ def main():
         cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False, num_workers=4
     )
 
-    gen_loss = getattr(losses, GEN_LOSS_STR)()
-    disc_loss = getattr(losses, DISC_LOSS_STR)()
-
     generator = getattr(nets, GENERATOR_MODEL)(
         LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM
     ).to(device)
@@ -106,10 +103,16 @@ def main():
     if "4x4" in GENERATOR_MODEL:
         LATENT_MATRIX = 4
 
-    initialize_weights(generator)
-    initialize_weights(discriminator)
+    gen_loss = getattr(losses, GEN_LOSS_STR)()
+    disc_loss = getattr(losses, DISC_LOSS_STR)()
 
-    writer = SummaryWriter(EXPERIMENT_DIR)
+    real_factor = 1
+    fake_factor = 0
+    if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
+        real_factor = -1
+        fake_factor = 1
+        initialize_weights(generator)
+        initialize_weights(discriminator)
 
     gen_optimizer = torch.optim.Adam(
         generator.parameters(), lr=GEN_LR, betas=(0.9, 0.999)
@@ -118,11 +121,7 @@ def main():
         discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
     )
 
-    real_factor = 1
-    fake_factor = 0
-    if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
-        real_factor = -1
-        fake_factor = 1
+    writer = SummaryWriter(EXPERIMENT_DIR)
 
     for epoch in tqdm(range(EPOCHS)):
         generator.train()

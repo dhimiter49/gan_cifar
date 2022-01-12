@@ -102,6 +102,10 @@ def main():
         CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
     ).to(device)
 
+    LATENT_MATRIX = 1
+    if "4x4" in GENERATOR_MODEL:
+        LATENT_MATRIX = 4
+
     initialize_weights(generator)
     initialize_weights(discriminator)
 
@@ -135,7 +139,9 @@ def main():
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
-                noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
+                noise = torch.randn(
+                    mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
+                ).to(device)
                 fake = generator(noise, labels)
                 prediction_real = discriminator(data, labels).view(-1)
                 prediction_fake = discriminator(fake, labels).view(-1)
@@ -194,7 +200,9 @@ def main():
                 real_targets = torch.ones(mini_batch_size).to(device)
                 fake_targets = torch.zeros(mini_batch_size).to(device)
 
-                noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
+                noise = torch.randn(
+                    mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
+                ).to(device)
                 fake = generator(noise, labels)
                 prediction_real = discriminator(data, labels).view(-1)
                 prediction_fake = discriminator(fake, labels).view(-1)

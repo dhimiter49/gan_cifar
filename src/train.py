@@ -115,7 +115,7 @@ def main():
         initialize_weights(discriminator)
 
     gen_optimizer = torch.optim.Adam(
-        generator.parameters(), lr=GEN_LR, betas=(0.9, 0.999)
+        generator.parameters(), lr=GEN_LR, betas=(0.5, 0.999)
     )
     disc_optimizer = torch.optim.Adam(
         discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005

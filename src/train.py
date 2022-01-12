@@ -180,11 +180,13 @@ def main():
             incep_score = 0.0
             incep_score_std = 0.0
             frechet_distance = 0.0
-            n_imgs_epoch = 50
-            all_fakes = torch.zeros(N_TEST_DATA, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
-            n_imgs = int(N_TEST_DATA / TEST_BATCH_SIZE) * n_imgs_epoch
+            n_imgs_epoch = TEST_BATCH_SIZE // 50  # save around 2%(1/50) of TEST DATASET
+            n_imgs = (
+                N_TEST_DATA // TEST_BATCH_SIZE
+            ) * n_imgs_epoch + N_TEST_DATA % TEST_BATCH_SIZE
             imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             imgs_real = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
+            all_fakes = torch.zeros(N_TEST_DATA, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
                 data, labels = data.to(device), labels.to(device)
                 mini_batch_size = data.shape[0]
@@ -204,10 +206,11 @@ def main():
                 all_fakes[idx * TEST_BATCH_SIZE : (idx + 1) * TEST_BATCH_SIZE] = fake
 
                 # save random real/fake images
-                random_indexes = np.random.choice(
-                    TEST_BATCH_SIZE, size=n_imgs_epoch, replace=False
-                )
                 start_idx = idx * n_imgs_epoch
+                n_imgs_epoch = min(n_imgs_epoch, mini_batch_size)
+                random_indexes = np.random.choice(
+                    mini_batch_size, size=n_imgs_epoch, replace=False
+                )
                 end_idx = start_idx + n_imgs_epoch
                 imgs_real[start_idx:end_idx] = data[random_indexes]
                 imgs_fake[start_idx:end_idx] = fake[random_indexes]

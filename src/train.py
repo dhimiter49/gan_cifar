@@ -109,13 +109,13 @@ def main():
     writer = SummaryWriter(EXPERIMENT_DIR)
 
     gen_optimizer = torch.optim.Adam(
-        generator.parameters(), lr=GEN_LR, betas=(0.9, 0.999)
+        generator.parameters(), lr=GEN_LR, betas=(0.5, 0.999)
     )
     disc_optimizer = torch.optim.Adam(
         discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
     )
 
-    real_factor = 1
+    real_factor = 0.9
     fake_factor = 0
     if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
         real_factor = -1

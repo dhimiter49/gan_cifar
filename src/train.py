@@ -109,14 +109,14 @@ def main():
     writer = SummaryWriter(EXPERIMENT_DIR)
 
     gen_optimizer = torch.optim.Adam(
-        generator.parameters(), lr=GEN_LR, betas=(0.9, 0.999)
+        generator.parameters(), lr=GEN_LR, betas=(0.5, 0.999)
     )
     disc_optimizer = torch.optim.Adam(
         discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
     )
 
-    real_factor = 1
-    fake_factor = 0
+    real_factor = 0.8
+    fake_factor = 0.3
     if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
         real_factor = -1
         fake_factor = 1
@@ -194,6 +194,8 @@ def main():
 
                 noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
                 fake = generator(noise, labels)
+                print("data:", data.shape)
+                print("noise:", noise.shape)
                 prediction_real = discriminator(data, labels).view(-1)
                 prediction_fake = discriminator(fake, labels).view(-1)
                 loss_real = disc_loss(prediction_real, real_targets)

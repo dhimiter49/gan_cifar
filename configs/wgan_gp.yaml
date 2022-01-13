@@ -5,11 +5,11 @@ dataset:
 
 nets:
     generator_model: DCGAN_Generator
-    discriminator_model: WGAN_Spectral_Discriminator
-    disc_features: 16
-    gen_features: 16
-    latent_dim: 100
-    embedding_dim: 100
+    discriminator_model: WGAN_Discriminator
+    disc_features: 64
+    gen_features: 64
+    latent_dim: 128
+    embedding_dim: 128
 
 training:
     batch_size: 64

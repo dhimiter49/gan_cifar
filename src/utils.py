@@ -17,7 +17,7 @@ def gradient_penalty(discriminator, labels, data, fake, device="cpu"):
     epsilon = torch.rand((BATCH_SIZE, 1, 1, 1)).repeat(1, C, H, W).to(device)
     interpolated_images = data * epsilon + fake * (1 - epsilon)
 
-    # Calculate critic scores
+    # Calculate discriminator scores
     mixed_scores = discriminator(interpolated_images, labels)
 
     # Take the gradient of the scores with respect to the images

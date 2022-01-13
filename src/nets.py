@@ -224,7 +224,12 @@ class DCGAN_Discriminator(nn.Module):
             nn.BatchNorm2d(disc_features * 4),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
-                disc_features * 4, 1, kernel_size=4, stride=1, padding=0, bias=False
+                disc_features * 4,
+                1,
+                kernel_size=4,
+                stride=1,
+                padding=0,
+                bias=False
             ),
             nn.Sigmoid(),
         ]
@@ -261,7 +266,7 @@ class WGAN_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(disc_features * 2),
+            nn.LayerNorm([64, disc_features * 2, 8, 8]),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 2,
@@ -271,11 +276,11 @@ class WGAN_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(disc_features * 4),
+            nn.LayerNorm([64, disc_features * 4, 4, 4]),
             nn.LeakyReLU(0.2),
-            nn.Conv2d(
-                disc_features * 4, 1, kernel_size=4, stride=1, padding=0, bias=False
-            ),
+
+            nn.Flatten(),
+            nn.Linear(disc_features * 64, 1),
         ]
         self.model = nn.Sequential(*layers)
         self.embed = nn.Embedding(num_classes, img_size * img_size)

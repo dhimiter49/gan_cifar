@@ -314,7 +314,7 @@ class WGAN_Spectral_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             )),
-            nn.BatchNorm2d(disc_features * 2),
+            nn.LayerNorm([64, disc_features * 2, 8, 8]),
             nn.LeakyReLU(0.2),
             spectral_norm(nn.Conv2d(
                 disc_features * 2,
@@ -324,7 +324,7 @@ class WGAN_Spectral_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             )),
-            nn.BatchNorm2d(disc_features * 4),
+            nn.LayerNorm([64, disc_features * 4, 4, 4]),
             nn.LeakyReLU(0.2),
             spectral_norm(nn.Conv2d(
                 disc_features * 4, 1, kernel_size=4, stride=1, padding=0, bias=False

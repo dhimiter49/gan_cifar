@@ -55,6 +55,7 @@ Testing will be carried out at specific intervals set in the configuration. Duri
 ```
 python -m pytorch_gan_metrics.calc_fid_stats --path dataset/cifar10_images --output dataset/cifar10_fid_stats.npz
 ```
-This will create a `.npz` file where the necessary data to calculate FID will be stored.
+This will create a `.npz` file where the necessary data to calculate FID will be stored. The FID stats are created only using test data as this is a more fair way to compare the generator to images that have not been used during training. Using the training data would almost definitely result in a slightly higher FID.
 
-We have also implemented a `test_gen.py gnerator_path.pt config_path` program to generate images for a passed generator and configuration file as an argument.
+We have also implemented a `test_gen.py gnerator_path.pt config_path` program to generate images and save them locally for a passed generator and configuration file as an argument.
+

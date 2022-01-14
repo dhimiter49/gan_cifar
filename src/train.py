@@ -35,10 +35,8 @@ def main():
         GEN_FEATURES,
         LATENT_DIM,
         EMBEDDING_DIM,
-        DISC_BATCHNORM,
-        DISC_LAYERNORM,
-        DISC_INSTANCENORM,
-        GEN_BATCHNORM,
+        DISC_NORMALIZERS,
+        GEN_NORMALIZERS,
         BATCH_SIZE,
         TEST_BATCH_SIZE,
         TEST_EVERY,
@@ -96,11 +94,21 @@ def main():
     )
 
     generator = getattr(nets, GENERATOR_MODEL)(
-        LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM, GEN_BATCHNORM
+        LATENT_DIM,
+        CHANNELS_IMG,
+        GEN_FEATURES,
+        NUM_CLASSES,
+        IMG_SIZE,
+        EMBEDDING_DIM,
+        GEN_NORMALIZERS,
     ).to(device)
 
     discriminator = getattr(nets, DISCRIMINATOR_MODEL)(
-        CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE, DISC_BATCHNORM, DISC_LAYERNORM, DISC_INSTANCENORM
+        CHANNELS_IMG,
+        DISC_FEATURES,
+        NUM_CLASSES,
+        IMG_SIZE,
+        DISC_NORMALIZERS,
     ).to(device)
 
     LATENT_MATRIX = 1

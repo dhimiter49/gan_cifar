@@ -29,9 +29,10 @@ class DCGAN_Generator(nn.Module):
         num_classes,
         img_size,
         embedding_dim,
-        gen_batchnorm,
+        normalizers_list,
     ):
         super().__init__()
+        normalizer = Normalizer(normalizers_list)
         layers = [
             nn.ConvTranspose2d(
                 latent_dim + embedding_dim,
@@ -41,11 +42,8 @@ class DCGAN_Generator(nn.Module):
                 padding=0,
                 bias=False,
             ),
-        ]
-        if gen_batchnorm == True:
-            layers.append(nn.BatchNorm2d(gen_features * 8))
-        layers.append(nn.LeakyReLU())
-        layers.append(
+            normalizer.init(gen_features * 8, 4),
+            nn.LeakyReLU(),
             nn.ConvTranspose2d(
                 gen_features * 8,
                 gen_features * 4,
@@ -53,12 +51,9 @@ class DCGAN_Generator(nn.Module):
                 stride=2,
                 padding=1,
                 bias=False,
-            )
-        )
-        if gen_batchnorm == True:
-            layers.append(nn.BatchNorm2d(gen_features * 4))
-        layers.append(nn.LeakyReLU())
-        layers.append(
+            ),
+            normalizer.init(gen_features * 4, 8),
+            nn.LeakyReLU(),
             nn.ConvTranspose2d(
                 gen_features * 4,
                 gen_features * 2,
@@ -66,12 +61,9 @@ class DCGAN_Generator(nn.Module):
                 stride=2,
                 padding=1,
                 bias=False,
-            )
-        )
-        if gen_batchnorm == True:
-            layers.append(nn.BatchNorm2d(gen_features * 2))
-        layers.append(nn.LeakyReLU())
-        layers.append(
+            ),
+            normalizer.init(gen_features * 2, 16),
+            nn.LeakyReLU(),
             nn.ConvTranspose2d(
                 gen_features * 2,
                 channels_img,
@@ -79,9 +71,9 @@ class DCGAN_Generator(nn.Module):
                 stride=2,
                 padding=1,
                 bias=False,
-            )
-        )
-        layers.append(nn.Tanh())
+            ),
+            nn.Tanh(),
+        ]
         self.model = nn.Sequential(*layers)
         self.embed = nn.Embedding(num_classes, embedding_dim)
 
@@ -100,9 +92,10 @@ class DCGAN_4x4_Generator(nn.Module):
         num_classes,
         img_size,
         embedding_dim,
-        gen_batchnorm,
+        normalizers_list,
     ):
         super().__init__()
+        normalizer = Normalizer(normalizers_list)
         layers = [
             nn.ConvTranspose2d(
                 latent_dim + int(embedding_dim / (4 * 4)),
@@ -112,7 +105,7 @@ class DCGAN_4x4_Generator(nn.Module):
                 padding=0,
                 bias=False,
             ),
-            nn.BatchNorm2d(gen_features * 8),
+            normalizer.init(gen_features * 8, 7),
             nn.LeakyReLU(),
             nn.ConvTranspose2d(
                 gen_features * 8,
@@ -122,7 +115,7 @@ class DCGAN_4x4_Generator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(gen_features * 4),
+            normalizer.init(gen_features * 4, 14),
             nn.LeakyReLU(),
             nn.ConvTranspose2d(
                 gen_features * 4,
@@ -132,7 +125,7 @@ class DCGAN_4x4_Generator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(gen_features * 2),
+            normalizer.init(gen_features * 2, 28),
             nn.LeakyReLU(),
             nn.ConvTranspose2d(
                 gen_features * 2,
@@ -167,9 +160,10 @@ class DCGAN_4x4_Generator_Conv(nn.Module):
         num_classes,
         img_size,
         embedding_dim,
-        gen_batchnorm,
+        normalizers_list,
     ):
         super().__init__()
+        normalizer = Normalizer(normalizers_list)
         layers = [
             nn.ConvTranspose2d(
                 latent_dim + int(embedding_dim / (4 * 4)),
@@ -179,7 +173,7 @@ class DCGAN_4x4_Generator_Conv(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(gen_features * 8),
+            normalizer.init(gen_features * 8, 8),
             nn.LeakyReLU(0.2),
             nn.ConvTranspose2d(
                 gen_features * 8,
@@ -189,7 +183,7 @@ class DCGAN_4x4_Generator_Conv(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(gen_features * 4),
+            normalizer.init(gen_features * 8, 16),
             nn.LeakyReLU(0.2),
             nn.ConvTranspose2d(
                 gen_features * 8,
@@ -199,7 +193,7 @@ class DCGAN_4x4_Generator_Conv(nn.Module):
                 padding=0,
                 bias=False,
             ),
-            nn.BatchNorm2d(gen_features * 2),
+            normalizer.init(gen_features * 8, 34),
             nn.LeakyReLU(0.2),
             nn.Conv2d(gen_features * 8, 3, kernel_size=3),
             nn.Tanh(),
@@ -225,12 +219,11 @@ class DCGAN_Discriminator(nn.Module):
         disc_features,
         num_classes,
         img_size,
-        disc_batchnorm,
-        disc_layernorm,
-        disc_instancenorm,
+        normalizers_list,
     ):
         super().__init__()
         self.img_size = img_size
+        normalizer = Normalizer(normalizers_list)
         layers = [
             nn.Conv2d(
                 channels_img + 1,
@@ -249,7 +242,7 @@ class DCGAN_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(disc_features * 2),
+            normalizer.init(disc_features * 2, 8),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 2,
@@ -259,7 +252,7 @@ class DCGAN_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(disc_features * 4),
+            normalizer.init(disc_features * 4, 4),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 4, 1, kernel_size=4, stride=1, padding=0, bias=False
@@ -284,12 +277,11 @@ class WGAN_Discriminator(nn.Module):
         disc_features,
         num_classes,
         img_size,
-        disc_batchnorm,
-        disc_layernorm,
-        disc_instancenorm,
+        normalizers_list,
     ):
         super().__init__()
         self.img_size = img_size
+        normalizer = Normalizer(normalizers_list)
         layers = [
             nn.Conv2d(
                 channels_img + 1,
@@ -298,10 +290,8 @@ class WGAN_Discriminator(nn.Module):
                 stride=2,
                 padding=1,
                 bias=False,
-            )
-        ]
-        layers.append(nn.LeakyReLU(0.2))
-        layers.append(
+            ),
+            nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features,
                 disc_features * 2,
@@ -309,16 +299,9 @@ class WGAN_Discriminator(nn.Module):
                 stride=2,
                 padding=1,
                 bias=False,
-            )
-        )
-        if disc_batchnorm == True:
-            layers.append(nn.BatchNorm2d(disc_features * 2))
-        if disc_layernorm == True:
-            layers.append(nn.LayerNorm([disc_features * 2, 8, 8]))
-        if disc_instancenorm == True:
-            layers.append(nn.InstanceNorm2d(disc_features * 2, affine=True))
-        layers.append(nn.LeakyReLU(0.2))
-        layers.append(
+            ),
+            normalizer.init(disc_features * 2, 8),
+            nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 2,
                 disc_features * 4,
@@ -326,17 +309,12 @@ class WGAN_Discriminator(nn.Module):
                 stride=2,
                 padding=1,
                 bias=False,
-            )
-        )
-        if disc_batchnorm == True:
-            layers.append(nn.BatchNorm2d(disc_features * 4))
-        if disc_layernorm == True:
-            layers.append(nn.LayerNorm([disc_features * 4, 4, 4]))
-        if disc_instancenorm == True:
-            layers.append(nn.InstanceNorm2d(disc_features * 4, affine=True))
-        layers.append(nn.LeakyReLU(0.2))
-        layers.append(nn.Flatten())
-        layers.append(nn.Linear(disc_features * 64, 1))
+            ),
+            normalizer.init(disc_features * 4, 4),
+            nn.LeakyReLU(0.2),
+            nn.Flatten(),
+            nn.Linear(disc_features * 64, 1),
+        ]
         self.model = nn.Sequential(*layers)
         self.embed = nn.Embedding(num_classes, img_size * img_size)
 
@@ -355,12 +333,11 @@ class WGAN_Spectral_Discriminator(nn.Module):
         disc_features,
         num_classes,
         img_size,
-        disc_batchnorm,
-        disc_layernorm,
-        disc_instancenorm,
+        normalizers_list,
     ):
         super().__init__()
         self.img_size = img_size
+        normalizer = Normalizer(normalizers_list)
         layers = [
             spectral_norm(
                 nn.Conv2d(
@@ -371,10 +348,8 @@ class WGAN_Spectral_Discriminator(nn.Module):
                     padding=1,
                     bias=False,
                 )
-            )
-        ]
-        layers.append(nn.LeakyReLU(0.2))
-        layers.append(
+            ),
+            nn.LeakyReLU(0.2),
             spectral_norm(
                 nn.Conv2d(
                     disc_features,
@@ -384,16 +359,9 @@ class WGAN_Spectral_Discriminator(nn.Module):
                     padding=1,
                     bias=False,
                 )
-            )
-        )
-        if disc_batchnorm == True:
-            layers.append(nn.BatchNorm2d(disc_features * 2))
-        if disc_layernorm == True:
-            layers.append(nn.LayerNorm([disc_features * 2, 8, 8]))
-        if disc_instancenorm == True:
-            layers.append(nn.InstanceNorm2d(disc_features * 2, affine=True))
-        layers.append(nn.LeakyReLU(0.2))
-        layers.append(
+            ),
+            normalizer.init(disc_features * 2, 8),
+            nn.LeakyReLU(0.2),
             spectral_norm(
                 nn.Conv2d(
                     disc_features * 2,
@@ -403,22 +371,15 @@ class WGAN_Spectral_Discriminator(nn.Module):
                     padding=1,
                     bias=False,
                 )
-            )
-        )
-        if disc_batchnorm == True:
-            layers.append(nn.BatchNorm2d(disc_features * 4))
-        if disc_layernorm == True:
-            layers.append(nn.LayerNorm([disc_features * 4, 4, 4]))
-        if disc_instancenorm == True:
-            layers.append(nn.InstanceNorm2d(disc_features * 4, affine=True))
-        layers.append(nn.LeakyReLU(0.2))
-        layers.append(
+            ),
+            normalizer.init(disc_features * 4, 4),
+            nn.LeakyReLU(0.2),
             spectral_norm(
                 nn.Conv2d(
                     disc_features * 4, 1, kernel_size=4, stride=1, padding=0, bias=False
                 )
-            )
-        )
+            ),
+        ]
         self.model = nn.Sequential(*layers)
         self.embed = nn.Embedding(num_classes, img_size * img_size)
 
@@ -437,12 +398,11 @@ class DCGAN_Discriminator_FC(nn.Module):
         disc_features,
         num_classes,
         img_size,
-        disc_batchnorm,
-        disc_layernorm,
-        disc_instancenorm,
+        normalizers_list,
     ):
         super().__init__()
         self.img_size = img_size
+        normalizer = Normalizer(normalizers_list)
         layers = [
             nn.Conv2d(
                 channels_img + 1,
@@ -452,6 +412,7 @@ class DCGAN_Discriminator_FC(nn.Module):
                 padding=1,
                 bias=False,
             ),
+            normalizer.init(disc_features * 4, 16),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 4,
@@ -461,6 +422,7 @@ class DCGAN_Discriminator_FC(nn.Module):
                 padding=1,
                 bias=False,
             ),
+            normalizer.init(disc_features * 8, 8),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 8,
@@ -470,6 +432,7 @@ class DCGAN_Discriminator_FC(nn.Module):
                 padding=1,
                 bias=False,
             ),
+            normalizer.init(disc_features * 8, 4),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 8,
@@ -479,6 +442,7 @@ class DCGAN_Discriminator_FC(nn.Module):
                 padding=1,
                 bias=False,
             ),
+            normalizer.init(disc_features * 16, 2),
             nn.LeakyReLU(0.2),
             nn.Flatten(),
             nn.Dropout(0.4),

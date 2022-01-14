@@ -35,6 +35,10 @@ def main():
         GEN_FEATURES,
         LATENT_DIM,
         EMBEDDING_DIM,
+        DISC_BATCHNORM,
+        DISC_LAYERNORM,
+        DISC_INSTANCENORM,
+        GEN_BATCHNORM,
         BATCH_SIZE,
         TEST_BATCH_SIZE,
         TEST_EVERY,
@@ -96,11 +100,11 @@ def main():
     disc_loss = getattr(losses, DISC_LOSS_STR)()
 
     generator = getattr(nets, GENERATOR_MODEL)(
-        LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM
+        LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM, GEN_BATCHNORM
     ).to(device)
 
     discriminator = getattr(nets, DISCRIMINATOR_MODEL)(
-        CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
+        CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE, DISC_BATCHNORM, DISC_LAYERNORM, DISC_INSTANCENORM
     ).to(device)
 
     initialize_weights(generator)

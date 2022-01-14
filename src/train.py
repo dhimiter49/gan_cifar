@@ -35,6 +35,10 @@ def main():
         GEN_FEATURES,
         LATENT_DIM,
         EMBEDDING_DIM,
+        DISC_BATCHNORM,
+        DISC_LAYERNORM,
+        DISC_INSTANCENORM,
+        GEN_BATCHNORM,
         BATCH_SIZE,
         TEST_BATCH_SIZE,
         TEST_EVERY,
@@ -92,11 +96,11 @@ def main():
     )
 
     generator = getattr(nets, GENERATOR_MODEL)(
-        LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM
+        LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM, GEN_BATCHNORM
     ).to(device)
 
     discriminator = getattr(nets, DISCRIMINATOR_MODEL)(
-        CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
+        CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE, DISC_BATCHNORM, DISC_LAYERNORM, DISC_INSTANCENORM
     ).to(device)
 
     LATENT_MATRIX = 1
@@ -196,8 +200,9 @@ def main():
             for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
                 data, labels = data.to(device), labels.to(device)
                 mini_batch_size = data.shape[0]
-                real_targets = torch.ones(mini_batch_size).to(device)
-                fake_targets = torch.zeros(mini_batch_size).to(device)
+
+                real_targets = real_factor * torch.ones(mini_batch_size).to(device)
+                fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
 
                 noise = torch.randn(
                     mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX

@@ -10,6 +10,10 @@ nets:
     gen_features: 16
     latent_dim: 100
     embedding_dim: 16
+    disc_batchnorm: True
+    disc_layernorm: False
+    disc_instancenorm: False
+    gen_batchnorm: True
 
 training:
     batch_size: 64

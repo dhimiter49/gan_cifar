@@ -17,7 +17,7 @@ def gradient_penalty(discriminator, labels, data, fake, device="cpu"):
     epsilon = torch.rand((BATCH_SIZE, 1, 1, 1)).repeat(1, C, H, W).to(device)
     interpolated_images = data * epsilon + fake * (1 - epsilon)
 
-    # Calculate critic scores
+    # Calculate discriminator scores
     mixed_scores = discriminator(interpolated_images, labels)
 
     # Take the gradient of the scores with respect to the images
@@ -94,6 +94,10 @@ def read_config(_input):
             gen_features,
             latent_dim,
             embedding_dim,
+            disc_batchnorm,
+            disc_layernorm,
+            disc_instancenorm,
+            gen_batchnorm,
         ) = list(config["nets"].values())
 
         config_training = (
@@ -122,6 +126,10 @@ def read_config(_input):
         assert type(gen_features) == int
         assert type(latent_dim) == int
         assert type(embedding_dim) == int
+        assert type(disc_batchnorm) == bool
+        assert type(disc_layernorm) == bool
+        assert type(disc_instancenorm) == bool
+        assert type(gen_batchnorm) == bool
         assert type(batch_size) == int
         assert type(test_batch_size) == int
         assert type(test_every) == int
@@ -151,6 +159,10 @@ def read_config(_input):
             "    gen_features: int\n"
             "    latent_dims: int\n"
             "    embedding_dim: int\n"
+            "    disc_batchnorm: bool\n"
+            "    disc_layernorm: bool\n"
+            "    disc_instancenorm: bool\n"
+            "    gen_instancenorm: bool\n"
             "training:\n"
             "    batch_size: int\n"
             "    test_batch_size: int\n"

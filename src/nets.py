@@ -4,6 +4,22 @@ import torch.nn.functional as F
 from torch.nn.utils.parametrizations import spectral_norm
 
 
+class Normalizer:
+    def __init__(self, normalizers_listalizers):
+        self.layers = []
+        for normalizer in normalizers_listalizers:
+            self.layers.append((getattr(nn, normalizer), normalizer))
+
+    def init(self, input_dim, matrix_dim=None):
+        activated_layers = [nn.Identity()]
+        for layer, layer_str in self.layers:
+            if layer_str == "LayerNorm":
+                activated_layers.append(layer([input_dim, matrix_dim, matrix_dim]))
+                continue
+            activated_layers.append(layer(input_dim))
+        return nn.Sequential(*activated_layers)
+
+
 class DCGAN_Generator(nn.Module):
     def __init__(
         self,

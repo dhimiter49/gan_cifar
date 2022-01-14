@@ -266,7 +266,9 @@ class WGAN_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.LayerNorm([64, disc_features * 2, 8, 8]),
+            nn.LayerNorm([disc_features * 2, 8, 8]),
+            #nn.BatchNorm2d(disc_features * 2),
+            #nn.InstanceNorm2d(disc_features * 2, affine=True),
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 2,
@@ -276,7 +278,9 @@ class WGAN_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.LayerNorm([64, disc_features * 4, 4, 4]),
+            nn.LayerNorm([disc_features * 4, 4, 4]),
+            #nn.BatchNorm2d(disc_features * 4),
+            #nn.InstanceNorm2d(disc_features * 4, affine=True),
             nn.LeakyReLU(0.2),
 
             nn.Flatten(),
@@ -314,7 +318,9 @@ class WGAN_Spectral_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             )),
-            nn.LayerNorm([64, disc_features * 2, 8, 8]),
+            nn.LayerNorm([disc_features * 2, 8, 8]),
+            #nn.BatchNorm2d(disc_features * 2),
+            #nn.InstanceNorm2d(disc_features * 2, affine=True),
             nn.LeakyReLU(0.2),
             spectral_norm(nn.Conv2d(
                 disc_features * 2,
@@ -324,7 +330,9 @@ class WGAN_Spectral_Discriminator(nn.Module):
                 padding=1,
                 bias=False,
             )),
-            nn.LayerNorm([64, disc_features * 4, 4, 4]),
+            nn.LayerNorm([disc_features * 4, 4, 4]),
+            #nn.BatchNorm2d(disc_features * 4),
+            #nn.InstanceNorm2d(disc_features * 4, affine=True),
             nn.LeakyReLU(0.2),
             spectral_norm(nn.Conv2d(
                 disc_features * 4, 1, kernel_size=4, stride=1, padding=0, bias=False

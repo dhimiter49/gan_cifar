@@ -143,10 +143,10 @@ def main():
         for (data, labels) in tqdm(data_loader, leave=False):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
-            if GEN_LOSS_STR == "BCELoss":
-                real_factor = torch.ones(mini_batch_size).uniform_(0.7, 0.9)
             real_targets = real_factor * torch.ones(mini_batch_size).to(device)
             fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
+            if GEN_LOSS_STR == "BCELoss":  # label smoothing
+                real_targets *= torch.ones(mini_batch_size).uniform_(0.7, 0.9)
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):

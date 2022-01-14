@@ -9,7 +9,7 @@ dependencies:
   - bzip2=1.0.8=h7b6447c_0
   - ca-certificates=2021.10.26=h06a4308_2
   - certifi=2021.10.8=py39h06a4308_0
-  - cpuonly=2.0=0
+  - cudatoolkit=10.2.89=hfd86e86_1
   - ffmpeg=4.3=hf484d3e_0
   - freetype=2.11.0=h70c0345_0
   - giflib=5.2.1=h7b6447c_0
@@ -43,25 +43,22 @@ dependencies:
   - numpy=1.21.2=py39h20f2e39_0
   - numpy-base=1.21.2=py39h79a1101_0
   - olefile=0.46=pyhd3eb1b0_0
-  - openh264=2.1.0=hd408876_0
+  - openh264=2.1.1=h4ff587b_0
   - openssl=1.1.1l=h7f8727e_0
   - pillow=8.4.0=py39h5aabda8_0
   - pip=21.2.4=py39h06a4308_0
   - python=3.9.7=h12debd9_1
-  - pytorch=1.10.0=py3.9_cpu_0
-  - pytorch-mutex=1.0=cpu
+  - pytorch-mutex=1.0=cuda
   - readline=8.1=h27cfd23_0
   - setuptools=58.0.4=py39h06a4308_0
   - six=1.16.0=pyhd3eb1b0_0
   - sqlite=3.36.0=hc218d9a_0
   - tk=8.6.11=h1ccaba5_0
-  - torchaudio=0.10.0=py39_cpu
-  - torchvision=0.11.1=py39_cpu
   - typing_extensions=3.10.0.2=pyh06a4308_0
   - tzdata=2021e=hda174b7_0
   - wheel=0.37.0=pyhd3eb1b0_1
   - xz=5.2.5=h7b6447c_0
-  - zlib=1.2.11=h7b6447c_3
+  - zlib=1.2.11=h7f8727e_4
   - zstd=1.4.9=haebb681_0
   - pip:
     - absl-py==1.0.0
@@ -96,10 +93,14 @@ dependencies:
     - rsa==4.8
     - scipy==1.5.4
     - setuptools-scm==6.3.2
+    - tb==0.1
     - tensorboard==2.7.0
     - tensorboard-data-server==0.6.1
     - tensorboard-plugin-wit==1.8.0
     - tomli==1.2.2
+    - torch==1.10.0
+    - torchaudio==0.10.0
+    - torchvision==0.11.1
     - tqdm==4.62.3
     - urllib3==1.26.7
     - werkzeug==2.0.2

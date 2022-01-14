@@ -23,7 +23,6 @@ training:
     epochs: 1000
     gen_lr: 0.0004
     disc_lr: 0.0004
-    gamma: 0.5
     cuda: True
     seed: 0
     disc_iterations: 5

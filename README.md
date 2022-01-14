@@ -16,28 +16,33 @@ In this project we use the latest conditional GAN models to learn to generate im
 As part of our project we take into consideration efficiency and training time. This means that we are careful to implement compact models that can be trained on a single GPU for a relatively short amount of time(less than two days).
 
 ## Set-Up
-To set up our environment we use Anaconda. First create a new environment using the following command:
+To set up our environment we use Anaconda. You can use one of two methods below.
+
+- First create a new environment using the following command:
+    ```
+    conda create -n environment_name python=3.9
+    ```
+    We use Python 3.9 in our testing but other versions might be compatible. We use PyTorch as our main machine learning library which can be installed using the following commands:
+    ```
+    # To install the cpu only version
+    conda install pytorch torchvision torchaudio cpuonly -c pytorch
+    # To install the nvidia/cuda version
+    conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
+    ```
+    We used PyTorch 1.10 and Cuda 10.2 in our testing but other version might be compatible. The other necessary packages can be installed using `pip` from the requirements file:
+    ```
+    pip install -r requirements.txt
+    ```
+
+- Alternatively you can create a conda environment with the name gan(can be changed manually in the variable name inside the `.yml` file), packed with all necessary packages using the `.yml` file:
+    ```
+    conda env create --file environment.yml
+    ```
+    This is set by default to install the gpu version of pytorch.
+
+Both methods will also install the 'black' package for formatting code and 'mypy' for static typing in Python. You can run both using the commands:
 ```
-conda create -n environment_name python=3.9
-```
-We use Python 3.9 in our testing but other versions might be compatible. We use PyTorch as our main machine learning library which can be installed using the following commands:
-```
-# To install the cpu only version
-conda install pytorch torchvision torchaudio cpuonly -c pytorch
-# To install the nvidia/cuda version
-conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
-```
-We used PyTorch 1.10 and Cuda 10.2 in our testing but other version might be compatible. The other necessary packages can be installed using `pip` from the requirements file:
-```
-pip install -r requirements.txt
-```
-Alternatively you can create a conda environment with the name gan(can be changed manually in the variable name inside the `.yml` file), packed with all necessary packages using the `.yml` file:
-```
-conda env create --file environment.yml
-```
-This will also install the 'black' package for formatting code and 'mypy' for static typing in Python. You can run both using the commands:
-```
-# you can run both commands for a file like shown below or a directory
+# you can run both commands for a file or directory like shown below
 black file.py
 mypy file.py
 ```
@@ -50,6 +55,7 @@ Testing will be carried out at specific intervals set in the configuration. Duri
 ```
 python -m pytorch_gan_metrics.calc_fid_stats --path dataset/cifar10_images --output dataset/cifar10_fid_stats.npz
 ```
-This will create a `.npz` file where the necessary data to calculate FID will be stored.
+This will create a `.npz` file where the necessary data to calculate FID will be stored. The FID stats are created only using test data as this is a more fair way to compare the generator to images that have not been used during training. Using the training data would almost definitely result in a slightly higher FID.
 
-We have also implemented a `test_gen.py gnerator_path.pt config_path` program to generate images for a passed generator and configuration file as an argument.
+We have also implemented a `test_gen.py gnerator_path.pt config_path` program to generate images and save them locally for a passed generator and configuration file as an argument.
+

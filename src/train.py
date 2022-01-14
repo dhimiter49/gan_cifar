@@ -42,7 +42,6 @@ def main():
         EPOCHS,
         GEN_LR,
         DISC_LR,
-        GAMMA,
         CUDA,
         SEED,
         DISC_ITERATIONS,
@@ -92,9 +91,6 @@ def main():
         cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False, num_workers=4
     )
 
-    gen_loss = getattr(losses, GEN_LOSS_STR)()
-    disc_loss = getattr(losses, DISC_LOSS_STR)()
-
     generator = getattr(nets, GENERATOR_MODEL)(
         LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM
     ).to(device)
@@ -103,10 +99,20 @@ def main():
         CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE
     ).to(device)
 
-    initialize_weights(generator)
-    initialize_weights(discriminator)
+    LATENT_MATRIX = 1
+    if "4x4" in GENERATOR_MODEL:
+        LATENT_MATRIX = 4
 
-    writer = SummaryWriter(EXPERIMENT_DIR)
+    gen_loss = getattr(losses, GEN_LOSS_STR)()
+    disc_loss = getattr(losses, DISC_LOSS_STR)()
+
+    real_factor = 1
+    fake_factor = 0
+    if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
+        real_factor = -1
+        fake_factor = 1
+        initialize_weights(generator)
+        initialize_weights(discriminator)
 
     gen_optimizer = torch.optim.Adam(
         generator.parameters(), lr=GEN_LR, betas=(0.5, 0.999)
@@ -115,11 +121,7 @@ def main():
         discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
     )
 
-    real_factor = 0.9
-    fake_factor = 0
-    if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
-        real_factor = -1
-        fake_factor = 1
+    writer = SummaryWriter(EXPERIMENT_DIR)
 
     for epoch in tqdm(range(EPOCHS)):
         generator.train()
@@ -129,13 +131,16 @@ def main():
         for (data, labels) in tqdm(data_loader, leave=False):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
-
+            if GEN_LOSS_STR == "BCELoss":
+                real_factor = torch.ones(mini_batch_size).uniform_(0.7, 0.9)
             real_targets = real_factor * torch.ones(mini_batch_size).to(device)
             fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
-                noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
+                noise = torch.randn(
+                    mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
+                ).to(device)
                 fake = generator(noise, labels)
                 prediction_real = discriminator(data, labels).view(-1)
                 prediction_fake = discriminator(fake, labels).view(-1)
@@ -181,18 +186,22 @@ def main():
             incep_score = 0.0
             incep_score_std = 0.0
             frechet_distance = 0.0
-            n_imgs_epoch = 50
-            all_fakes = torch.zeros(N_TEST_DATA, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
-            n_imgs = int(N_TEST_DATA / TEST_BATCH_SIZE) * n_imgs_epoch
+            n_imgs_epoch = TEST_BATCH_SIZE // 50  # save around 2%(1/50) of TEST DATASET
+            n_imgs = (
+                N_TEST_DATA // TEST_BATCH_SIZE
+            ) * n_imgs_epoch + N_TEST_DATA % TEST_BATCH_SIZE
             imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             imgs_real = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
+            all_fakes = torch.zeros(N_TEST_DATA, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
                 data, labels = data.to(device), labels.to(device)
                 mini_batch_size = data.shape[0]
                 real_targets = torch.ones(mini_batch_size).to(device)
                 fake_targets = torch.zeros(mini_batch_size).to(device)
 
-                noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
+                noise = torch.randn(
+                    mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
+                ).to(device)
                 fake = generator(noise, labels)
                 prediction_real = discriminator(data, labels).view(-1)
                 prediction_fake = discriminator(fake, labels).view(-1)
@@ -205,10 +214,11 @@ def main():
                 all_fakes[idx * TEST_BATCH_SIZE : (idx + 1) * TEST_BATCH_SIZE] = fake
 
                 # save random real/fake images
-                random_indexes = np.random.choice(
-                    TEST_BATCH_SIZE, size=n_imgs_epoch, replace=False
-                )
                 start_idx = idx * n_imgs_epoch
+                n_imgs_epoch = min(n_imgs_epoch, mini_batch_size)
+                random_indexes = np.random.choice(
+                    mini_batch_size, size=n_imgs_epoch, replace=False
+                )
                 end_idx = start_idx + n_imgs_epoch
                 imgs_real[start_idx:end_idx] = data[random_indexes]
                 imgs_fake[start_idx:end_idx] = fake[random_indexes]

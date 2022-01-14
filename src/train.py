@@ -189,9 +189,8 @@ def main():
             for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
                 data, labels = data.to(device), labels.to(device)
                 mini_batch_size = data.shape[0]
-                real_targets = torch.ones(mini_batch_size).to(device)
-                fake_targets = torch.zeros(mini_batch_size).to(device)
-
+                real_targets = real_factor * torch.ones(mini_batch_size).to(device)
+                fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
                 noise = torch.randn(mini_batch_size, LATENT_DIM, 1, 1).to(device)
                 fake = generator(noise, labels)
                 prediction_real = discriminator(data, labels).view(-1)

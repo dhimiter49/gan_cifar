@@ -94,10 +94,8 @@ def read_config(_input):
             gen_features,
             latent_dim,
             embedding_dim,
-            disc_batchnorm,
-            disc_layernorm,
-            disc_instancenorm,
-            gen_batchnorm,
+            disc_normalizers,
+            gen_normalizers,
         ) = list(config["nets"].values())
 
         config_training = (
@@ -126,10 +124,8 @@ def read_config(_input):
         assert type(gen_features) == int
         assert type(latent_dim) == int
         assert type(embedding_dim) == int
-        assert type(disc_batchnorm) == bool
-        assert type(disc_layernorm) == bool
-        assert type(disc_instancenorm) == bool
-        assert type(gen_batchnorm) == bool
+        assert type(disc_normalizers) == list
+        assert type(gen_normalizers) == list
         assert type(batch_size) == int
         assert type(test_batch_size) == int
         assert type(test_every) == int

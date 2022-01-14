@@ -4,18 +4,19 @@ dataset:
     num_classes: 10
 
 nets:
-    # Generator: DCGAN_Generator, DCGAN_4x4_Generator
+    # Generator: DCGAN_Generator, DCGAN_4x4_Generator, DCGAN_4x4_Generator_Conv
     generator_model: DCGAN_Generator
-    # Discriminator: DCGAN_Discriminator, WGAN_Discriminator
+    # Discriminator: DCGAN_Discriminator, DCGAN_Discriminator_FC,  WGAN_Discriminator, WGAN_Spectral_Discriminator,
     discriminator_model: DCGAN_Discriminator
     disc_features: 16
     gen_features: 16
     latent_dim: 128
     embedding_dim: 16
-    disc_batchnorm: True
-    disc_layernorm: False
-    disc_instancenorm: False
-    gen_batchnorm: True
+    # Normalizer: BatchNorm2d, LayerNorm, InstanceNorm2d
+    disc_normalizers:
+        - BatchNorm2d
+    gen_normalizers:
+        - BatchNorm2d
 
 training:
     batch_size: 128

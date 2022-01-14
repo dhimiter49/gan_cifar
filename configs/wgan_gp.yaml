@@ -10,10 +10,10 @@ nets:
     gen_features: 64
     latent_dim: 128
     embedding_dim: 128
-    disc_batchnorm: True
-    disc_layernorm: False
-    disc_instancenorm: False
-    gen_batchnorm: True
+    disc_normalizers:
+        - BatchNorm2d
+    gen_normalizers:
+        - BatchNorm2d
 
 training:
     batch_size: 64

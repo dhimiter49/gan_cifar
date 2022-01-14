@@ -12,6 +12,7 @@ experiments_dir = Path()  # set this paths after reading the config file
 gen_dir = Path()
 disc_dir = Path()
 
+
 def gradient_penalty(discriminator, labels, data, fake, device="cpu"):
     BATCH_SIZE, C, H, W = data.shape
     epsilon = torch.rand((BATCH_SIZE, 1, 1, 1)).repeat(1, C, H, W).to(device)
@@ -155,10 +156,8 @@ def read_config(_input):
             "    gen_features: int\n"
             "    latent_dims: int\n"
             "    embedding_dim: int\n"
-            "    disc_batchnorm: bool\n"
-            "    disc_layernorm: bool\n"
-            "    disc_instancenorm: bool\n"
-            "    gen_instancenorm: bool\n"
+            "    disc_normalizers: list\n"
+            "    gen_normalizers: list\n"
             "training:\n"
             "    batch_size: int\n"
             "    test_batch_size: int\n"

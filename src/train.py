@@ -61,7 +61,9 @@ def main():
     Path(EXPERIMENT_DIR).mkdir(parents=True, exist_ok=True)
     Path(GEN_DIR.parent).mkdir(parents=True, exist_ok=True)
     open(GEN_DIR, "w+")
+    open(GEN_DIR.parent / Path("gen_best.pt"), "w+")
     open(DISC_DIR, "w+")
+    open(DISC_DIR.parent / Path("disc_best.pt"), "w+")
     print("Saving experiment under: \t", EXPERIMENT_DIR)
     print("Saving experiment models under: ", GEN_DIR.parent)
 
@@ -260,10 +262,13 @@ def main():
             grid_fake = torchvision.utils.make_grid(imgs_fake, nrow=16, normalize=True)
             writer.add_image("real", grid_real, step)
             writer.add_image("fake", grid_fake, step)
+            if frechet_distance / 10 + incep_score > best_FID_IS_score:
+                torch.save(gen.state_dict(), GEN_DIR.parent / Path("gen_best.pt"))
+                torch.save(disc.state_dict(), DISC_DIR.parent / Path("disc_best.pt"))
 
         if step % SAVE_EVERY == 0:
-            torch.save(generator.state_dict(), GEN_DIR)
-            torch.save(discriminator.state_dict(), DISC_DIR)
+            torch.save(gen.state_dict(), GEN_DIR)
+            torch.save(disc.state_dict(), DISC_DIR)
 
 
 if __name__ == "__main__":

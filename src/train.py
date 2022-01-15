@@ -35,10 +35,8 @@ def main():
         GEN_FEATURES,
         LATENT_DIM,
         EMBEDDING_DIM,
-        DISC_BATCHNORM,
-        DISC_LAYERNORM,
-        DISC_INSTANCENORM,
-        GEN_BATCHNORM,
+        DISC_NORMALIZERS,
+        GEN_NORMALIZERS,
         BATCH_SIZE,
         TEST_BATCH_SIZE,
         TEST_EVERY,
@@ -96,11 +94,21 @@ def main():
     )
 
     generator = getattr(nets, GENERATOR_MODEL)(
-        LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM, GEN_BATCHNORM
+        LATENT_DIM,
+        CHANNELS_IMG,
+        GEN_FEATURES,
+        NUM_CLASSES,
+        IMG_SIZE,
+        EMBEDDING_DIM,
+        GEN_NORMALIZERS,
     ).to(device)
 
     discriminator = getattr(nets, DISCRIMINATOR_MODEL)(
-        CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE, DISC_BATCHNORM, DISC_LAYERNORM, DISC_INSTANCENORM
+        CHANNELS_IMG,
+        DISC_FEATURES,
+        NUM_CLASSES,
+        IMG_SIZE,
+        DISC_NORMALIZERS,
     ).to(device)
 
     LATENT_MATRIX = 1
@@ -135,10 +143,12 @@ def main():
         for (data, labels) in tqdm(data_loader, leave=False):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
-            if GEN_LOSS_STR == "BCELoss":
-                real_factor = torch.ones(mini_batch_size).uniform_(0.7, 0.9)
             real_targets = real_factor * torch.ones(mini_batch_size).to(device)
             fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
+            if GEN_LOSS_STR == "BCELoss":  # label smoothing
+                real_targets *= (
+                    torch.ones(mini_batch_size).uniform_(0.7, 0.9).to(device)
+                )
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):

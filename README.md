@@ -59,3 +59,6 @@ This will create a `.npz` file where the necessary data to calculate FID will be
 
 We have also implemented a `test_gen.py gnerator_path.pt config_path` program to generate images and save them locally for a passed generator and configuration file as an argument.
 
+## Configuration
+To run an experiment you can either use one of the existing configuration under the `configs/` folder or create your own. To help define a configuration you can use `default.yaml` configuration as template, where all possible options for each parameter are written. The default configuration trains a general conditional GAN. The `dcgan.yaml` configuration has been optimized for our task of interest, CIFAR10. The `wgan.yaml` and `wgan_gp.yaml` configuration both train a conditional Wasserstein GAN. The first applies clipping to the parameters of the discriminator whereas the second calculates a gradient penalty like proposed in this [paper](https://arxiv.org/pdf/1706.08500).
+

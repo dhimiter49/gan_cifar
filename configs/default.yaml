@@ -4,18 +4,19 @@ dataset:
     num_classes: 10
 
 nets:
-    # Generator: DCGAN_Generator, DCGAN_4x4_Generator
+    # Generator: DCGAN_Generator, DCGAN_4x4_Generator, DCGAN_4x4_Generator_Conv
     generator_model: DCGAN_Generator
-    # Discriminator: DCGAN_Discriminator, WGAN_Discriminator
+    # Discriminator: DCGAN_Discriminator, DCGAN_Discriminator_FC,  WGAN_Discriminator, WGAN_Spectral_Discriminator,
     discriminator_model: DCGAN_Discriminator
     disc_features: 16
     gen_features: 16
     latent_dim: 128
     embedding_dim: 16
-    disc_batchnorm: True
-    disc_layernorm: False
-    disc_instancenorm: False
-    gen_batchnorm: True
+    # Normalizer: BatchNorm2d, LayerNorm, InstanceNorm2d; use "disc_normalizers: []" for no normalizer
+    disc_normalizers:
+        - BatchNorm2d
+    gen_normalizers:
+        - BatchNorm2d
 
 training:
     batch_size: 128
@@ -29,7 +30,7 @@ training:
     seed: 0
     disc_iterations: 1
     weight_clip: 0.0  #WGAN
-    lambda_gp: 0  #WGAN-GP
+    lambda_gp: 0  #WGAN-GP(gradient penalty)
 
     # Losses: BCELoss, ExpSigmaLoss, WassersteinLoss
     gen_loss: BCELoss

@@ -6,14 +6,14 @@ dataset:
 nets:
     generator_model: DCGAN_Generator
     discriminator_model: DCGAN_Discriminator
-    disc_features: 16
-    gen_features: 16
+    disc_features: 32
+    gen_features: 32
     latent_dim: 128
     embedding_dim: 16
-    disc_batchnorm: True
-    disc_layernorm: False
-    disc_instancenorm: False
-    gen_batchnorm: True
+    disc_normalizers:
+        - BatchNorm2d
+    gen_normalizers:
+        - BatchNorm2d
 
 training:
     batch_size: 128
@@ -21,7 +21,7 @@ training:
     test_every: 10
     save_every: 50
     epochs: 1000
-    gen_lr: 0.002
+    gen_lr: 0.0001
     disc_lr: 0.0002
     cuda: True
     seed: 0

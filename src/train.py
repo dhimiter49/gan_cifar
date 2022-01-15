@@ -35,10 +35,8 @@ def main():
         GEN_FEATURES,
         LATENT_DIM,
         EMBEDDING_DIM,
-        DISC_BATCHNORM,
-        DISC_LAYERNORM,
-        DISC_INSTANCENORM,
-        GEN_BATCHNORM,
+        DISC_NORMALIZERS,
+        GEN_NORMALIZERS,
         BATCH_SIZE,
         TEST_BATCH_SIZE,
         TEST_EVERY,
@@ -97,12 +95,22 @@ def main():
         cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False, num_workers=4
     )
 
-    gen= getattr(nets, GENERATOR_MODEL)(
-        LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM, GEN_BATCHNORM
+    gen = getattr(nets, GENERATOR_MODEL)(
+        LATENT_DIM,
+        CHANNELS_IMG,
+        GEN_FEATURES,
+        NUM_CLASSES,
+        IMG_SIZE,
+        EMBEDDING_DIM,
+        GEN_NORMALIZERS,
     ).to(device)
 
     disc = getattr(nets, DISCRIMINATOR_MODEL)(
-        CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE, DISC_BATCHNORM, DISC_LAYERNORM, DISC_INSTANCENORM
+        CHANNELS_IMG,
+        DISC_FEATURES,
+        NUM_CLASSES,
+        IMG_SIZE,
+        DISC_NORMALIZERS,
     ).to(device)
 
     LATENT_MATRIX = 1
@@ -120,9 +128,7 @@ def main():
         initialize_weights(gen)
         initialize_weights(disc)
 
-    gen_optimizer = torch.optim.Adam(
-        gen.parameters(), lr=GEN_LR, betas=(0.5, 0.9)
-    )
+    gen_optimizer = torch.optim.Adam(gen.parameters(), lr=GEN_LR, betas=(0.5, 0.9))
     disc_optimizer = torch.optim.Adam(
         disc.parameters(), lr=DISC_LR, betas=(0.5, 0.9), weight_decay=0.005
     )
@@ -140,8 +146,10 @@ def main():
             mini_batch_size = data.shape[0]
             real_targets = real_factor * torch.ones(mini_batch_size).to(device)
             fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
-            if GEN_LOSS_STR == "BCELoss":
-                real_targets *= torch.ones(mini_batch_size).uniform_(0.7, 0.9)
+            if GEN_LOSS_STR == "BCELoss":  # label smoothing
+                real_targets *= (
+                    torch.ones(mini_batch_size).uniform_(0.7, 0.9).to(device)
+                )
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):

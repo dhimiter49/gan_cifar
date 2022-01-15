@@ -146,7 +146,9 @@ def main():
             real_targets = real_factor * torch.ones(mini_batch_size).to(device)
             fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
             if GEN_LOSS_STR == "BCELoss":  # label smoothing
-                real_targets *= torch.ones(mini_batch_size).uniform_(0.7, 0.9)
+                real_targets *= (
+                    torch.ones(mini_batch_size).uniform_(0.7, 0.9).to(device)
+                )
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):

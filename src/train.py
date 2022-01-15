@@ -205,13 +205,12 @@ def main():
             incep_score = 0.0
             incep_score_std = 0.0
             frechet_distance = 0.0
-            n_imgs_epoch = TEST_BATCH_SIZE // 50  # save around 2%(1/50) of TEST DATASET
+            n_imgs_epoch = TEST_BATCH_SIZE // 20  # save around 5%(1/20) of TEST DATASET
             n_imgs = (
                 N_TEST_DATA // TEST_BATCH_SIZE
             ) * n_imgs_epoch + N_TEST_DATA % TEST_BATCH_SIZE
             imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             imgs_real = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
-            all_fakes = torch.zeros(N_TEST_DATA, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
                 data, labels = data.to(device), labels.to(device)
                 mini_batch_size = data.shape[0]
@@ -231,7 +230,6 @@ def main():
                 epoch_loss_disc += loss_disc.item()
                 loss_gen = gen_loss(prediction_fake, real_targets)
                 epoch_loss_gen += loss_gen.item()
-                all_fakes[idx * TEST_BATCH_SIZE : (idx + 1) * TEST_BATCH_SIZE] = fake
 
                 # save random real/fake images
                 start_idx = idx * n_imgs_epoch
@@ -256,7 +254,7 @@ def main():
                 incep_score,
                 incep_score_std,
             ), frechet_distance = get_inception_score_and_fid(
-                all_fakes / 2 + 0.5, working_dir / Path("dataset/cifar10_fid_stats.npz")
+                imgs_fake / 2 + 0.5, working_dir / Path("dataset/cifar10_fid_stats.npz")
             )
 
             # tracking

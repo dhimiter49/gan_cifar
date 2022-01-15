@@ -97,11 +97,11 @@ def main():
         cifar10_dataset_test, batch_size=TEST_BATCH_SIZE, shuffle=False, num_workers=4
     )
 
-    generator = getattr(nets, GENERATOR_MODEL)(
+    gen= getattr(nets, GENERATOR_MODEL)(
         LATENT_DIM, CHANNELS_IMG, GEN_FEATURES, NUM_CLASSES, IMG_SIZE, EMBEDDING_DIM, GEN_BATCHNORM
     ).to(device)
 
-    discriminator = getattr(nets, DISCRIMINATOR_MODEL)(
+    disc = getattr(nets, DISCRIMINATOR_MODEL)(
         CHANNELS_IMG, DISC_FEATURES, NUM_CLASSES, IMG_SIZE, DISC_BATCHNORM, DISC_LAYERNORM, DISC_INSTANCENORM
     ).to(device)
 
@@ -117,62 +117,67 @@ def main():
     if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
         real_factor = -1
         fake_factor = 1
-        initialize_weights(generator)
-        initialize_weights(discriminator)
+        initialize_weights(gen)
+        initialize_weights(disc)
 
     gen_optimizer = torch.optim.Adam(
-        generator.parameters(), lr=GEN_LR, betas=(0.5, 0.999)
+        gen.parameters(), lr=GEN_LR, betas=(0.5, 0.9)
     )
     disc_optimizer = torch.optim.Adam(
-        discriminator.parameters(), lr=DISC_LR, betas=(0.5, 0.999), weight_decay=0.005
+        disc.parameters(), lr=DISC_LR, betas=(0.5, 0.9), weight_decay=0.005
     )
 
     writer = SummaryWriter(EXPERIMENT_DIR)
+    best_FID_IS_score = 0.0
 
     for epoch in tqdm(range(EPOCHS)):
-        generator.train()
-        discriminator.train()
+        gen.train()
+        disc.train()
         epoch_loss_disc = 0.0
         epoch_loss_gen = 0.0
         for (data, labels) in tqdm(data_loader, leave=False):
             data, labels = data.to(device), labels.to(device)
             mini_batch_size = data.shape[0]
-            if GEN_LOSS_STR == "BCELoss":
-                real_factor = torch.ones(mini_batch_size).uniform_(0.7, 0.9)
             real_targets = real_factor * torch.ones(mini_batch_size).to(device)
             fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
+            if GEN_LOSS_STR == "BCELoss":
+                real_targets *= torch.ones(mini_batch_size).uniform_(0.7, 0.9)
 
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
+                disc.zero_grad()
                 noise = torch.randn(
                     mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
                 ).to(device)
-                fake = generator(noise, labels)
-                prediction_real = discriminator(data, labels).view(-1)
-                prediction_fake = discriminator(fake, labels).view(-1)
+                fake = gen(noise, labels)
+                prediction_real = disc(data, labels).view(-1)
+                prediction_fake = disc(fake, labels).view(-1)
                 loss_real = disc_loss(prediction_real, real_targets)
                 loss_fake = disc_loss(prediction_fake, fake_targets)
 
                 gp = 0.0
                 if LAMBDA_GP != 0:
-                    gp = gradient_penalty(discriminator, labels, data, fake, device)
+                    gp = gradient_penalty(disc, labels, data, fake, device)
 
                 loss_disc = (loss_real + loss_fake) + LAMBDA_GP * gp
                 batch_loss_disc.append(loss_disc.item())
-                discriminator.zero_grad()
                 loss_disc.backward(retain_graph=True)
                 disc_optimizer.step()
 
                 if WEIGHT_CLIP != 0.0:
-                    for p in discriminator.parameters():
+                    for p in disc.parameters():
                         p.data.clamp_(-WEIGHT_CLIP, WEIGHT_CLIP)
 
             epoch_loss_disc += np.mean(batch_loss_disc)
 
-            prediction_fake = discriminator(fake, labels).view(-1)
+            gen.zero_grad()
+            noise = torch.randn(
+                mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
+            ).to(device)
+            fake = gen(noise, labels)
+            prediction_fake = disc(fake, labels).view(-1)
             loss_gen = gen_loss(prediction_fake, real_targets)
             epoch_loss_gen += loss_gen.item()
-            generator.zero_grad()
             loss_gen.backward()
             gen_optimizer.step()
 
@@ -183,8 +188,8 @@ def main():
         writer.add_scalar("train_loss/generator", epoch_loss_gen, step)
 
         if step % TEST_EVERY == 0:
-            generator.eval()
-            discriminator.eval()
+            gen.eval()
+            disc.eval()
             epoch_loss_disc = 0.0
             epoch_loss_gen = 0.0
             accuracy_real = 0.0
@@ -209,9 +214,9 @@ def main():
                 noise = torch.randn(
                     mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
                 ).to(device)
-                fake = generator(noise, labels)
-                prediction_real = discriminator(data, labels).view(-1)
-                prediction_fake = discriminator(fake, labels).view(-1)
+                fake = gen(noise, labels)
+                prediction_real = disc(data, labels).view(-1)
+                prediction_fake = disc(fake, labels).view(-1)
                 loss_real = disc_loss(prediction_real, real_targets)
                 loss_fake = disc_loss(prediction_fake, fake_targets)
                 loss_disc = loss_real + loss_fake

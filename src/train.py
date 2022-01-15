@@ -276,6 +276,7 @@ def main():
             writer.add_image("real", grid_real, step)
             writer.add_image("fake", grid_fake, step)
             if frechet_distance / 10 + incep_score > best_FID_IS_score:
+                best_FID_IS_score = frechet_distance / 10 + incep_score
                 torch.save(gen.state_dict(), GEN_DIR.parent / Path("gen_best.pt"))
                 torch.save(disc.state_dict(), DISC_DIR.parent / Path("disc_best.pt"))
 

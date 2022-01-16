@@ -331,7 +331,7 @@ class WGAN_Discriminator(nn.Module):
         self.model = nn.Sequential(*layers)
         self.embed = nn.Embedding(num_classes, img_size * img_size)
 
-    def forward(self, noise, labels):
+    def forward(self, noise, labels, feat_matching=None):
         embedding = self.embed(labels).view(
             labels.shape[0], 1, self.img_size, self.img_size
         )
@@ -396,7 +396,7 @@ class WGAN_Spectral_Discriminator(nn.Module):
         self.model = nn.Sequential(*layers)
         self.embed = nn.Embedding(num_classes, img_size * img_size)
 
-    def forward(self, noise, labels):
+    def forward(self, noise, labels, feat_matching=None):
         embedding = self.embed(labels).view(
             labels.shape[0], 1, self.img_size, self.img_size
         )

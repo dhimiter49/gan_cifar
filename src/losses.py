@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 BCELoss = nn.BCELoss
 
 
@@ -29,3 +30,12 @@ class WassersteinLoss(nn.Module):
 
     def forward(self, prediction: torch.Tensor, target: torch.Tensor):
         return (target * prediction).mean()
+
+
+class FeatureMatchingLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.loss = nn.MSELoss()  # could also use MAE
+
+    def forward(self, real_features: torch.Tensor, fake_features: torch.Tensor):
+        return self.loss(fake_features, real_features)

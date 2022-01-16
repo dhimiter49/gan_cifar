@@ -128,6 +128,8 @@ def main():
         initialize_weights(gen)
         initialize_weights(disc)
 
+    feature_matching = True if GEN_LOSS_STR == "FeatureMatchingLoss" else False
+
     gen_optimizer = torch.optim.Adam(gen.parameters(), lr=GEN_LR, betas=(0.5, 0.9))
     disc_optimizer = torch.optim.Adam(
         disc.parameters(), lr=DISC_LR, betas=(0.5, 0.9), weight_decay=0.005
@@ -146,7 +148,7 @@ def main():
             mini_batch_size = data.shape[0]
             real_targets = real_factor * torch.ones(mini_batch_size).to(device)
             fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
-            if GEN_LOSS_STR == "BCELoss":  # label smoothing
+            if DISC_LOSS_STR == "BCELoss":  # label smoothing
                 real_targets *= (
                     torch.ones(mini_batch_size).uniform_(0.7, 0.9).to(device)
                 )
@@ -183,8 +185,14 @@ def main():
                 mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
             ).to(device)
             fake = gen(noise, labels)
-            prediction_fake = disc(fake, labels).view(-1)
-            loss_gen = gen_loss(prediction_fake, real_targets)
+            prediction_fake = disc(fake, labels, feature_matching).view(-1)
+            if feature_matching:
+                real_targets = disc(data, labels, feature_matching).view(-1)
+                prediction_fake = prediction_fake.reshape(mini_batch_size, -1)
+                prediction_fake = prediction_fake.mean(0)
+                real_targets = real_targets.reshape(mini_batch_size, -1)
+                real_targets = real_targets.mean(0).detach()
+            loss_gen = gen_loss(prediction_fake, real_targets.detach())
             epoch_loss_gen += loss_gen.item()
             loss_gen.backward()
             gen_optimizer.step()

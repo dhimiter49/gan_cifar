@@ -1,4 +1,5 @@
 import sys
+import shutil
 import time
 from pathlib import Path
 import yaml
@@ -177,5 +178,12 @@ def read_config(_input):
         print(e)
         sys.exit(1)
 
+    Path(experiments_dir).mkdir(parents=True, exist_ok=True)
+    Path(gen_dir.parent).mkdir(parents=True, exist_ok=True)
+    open(gen_dir, "w+")
+    open(gen_dir.parent / Path("gen_best.pt"), "w+")
+    open(disc_dir, "w+")
+    open(disc_dir.parent / Path("disc_best.pt"), "w+")
+    shutil.copyfile(path_config, experiments_dir / Path(path_config.name))
     dirs = [experiments_dir, gen_dir, disc_dir]
     return config_dataset + config_model + config_training + dirs

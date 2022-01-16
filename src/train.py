@@ -56,12 +56,6 @@ def main():
         DISC_DIR,
     ) = read_config(sys.argv)
 
-    Path(EXPERIMENT_DIR).mkdir(parents=True, exist_ok=True)
-    Path(GEN_DIR.parent).mkdir(parents=True, exist_ok=True)
-    open(GEN_DIR, "w+")
-    open(GEN_DIR.parent / Path("gen_best.pt"), "w+")
-    open(DISC_DIR, "w+")
-    open(DISC_DIR.parent / Path("disc_best.pt"), "w+")
     print("Saving experiment under: \t", EXPERIMENT_DIR)
     print("Saving experiment models under: ", GEN_DIR.parent)
 

@@ -1,13 +1,17 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchgan.layers as gan_layers
 from torch.nn.utils.parametrizations import spectral_norm
 
 
 class Normalizer:
-    def __init__(self, normalizers_listalizers):
+    def __init__(self, normalizers_list):
         self.layers = []
-        for normalizer in normalizers_listalizers:
+        for normalizer in normalizers_list:
+            if normalizer == "VirtualBatchNorm":
+                self.layers.append((getattr(gan_layers, normalizer), normalizer))
+                continue
             self.layers.append((getattr(nn, normalizer), normalizer))
 
     def init(self, input_dim, matrix_dim=None):
@@ -15,6 +19,9 @@ class Normalizer:
         for layer, layer_str in self.layers:
             if layer_str == "LayerNorm":
                 activated_layers.append(layer([input_dim, matrix_dim, matrix_dim]))
+                continue
+            if layer_str == "Dropout":
+                activated_layers.append(layer(0.4, inplace=True))
                 continue
             activated_layers.append(layer(input_dim))
         return nn.Sequential(*activated_layers)

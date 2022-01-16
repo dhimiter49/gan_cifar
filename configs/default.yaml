@@ -12,7 +12,7 @@ nets:
     gen_features: 16
     latent_dim: 128
     embedding_dim: 16
-    # Normalizer: BatchNorm2d, LayerNorm, InstanceNorm2d; use "disc_normalizers: []" for no normalizer
+    # Normalizer: BatchNorm2d, LayerNorm, InstanceNorm2d, VirtualBatchNorm, Dropout; use "disc_normalizers: []" for no normalizer
     disc_normalizers:
         - BatchNorm2d
     gen_normalizers:

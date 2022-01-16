@@ -101,8 +101,10 @@ dependencies:
     - torch==1.10.0
     - torchaudio==0.10.0
     - torchvision==0.11.1
+    - torchgan==0.1.0
     - tqdm==4.62.3
     - urllib3==1.26.7
     - werkzeug==2.0.2
+    - wget==3.2
     - zipp==3.6.0
 prefix: ~/anaconda3/envs/gan

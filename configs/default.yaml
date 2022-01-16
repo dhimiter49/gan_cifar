@@ -32,6 +32,6 @@ training:
     weight_clip: 0.0  #WGAN
     lambda_gp: 0  #WGAN-GP(gradient penalty)
 
-    # Losses: BCELoss, ExpSigmaLoss, WassersteinLoss
+    # Losses: BCELoss, ExpSigmaLoss, WassersteinLoss, FeatureMatchingLoss
     gen_loss: BCELoss
     disc_loss: BCELoss

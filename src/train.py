@@ -155,7 +155,7 @@ def main():
                 ).to(device)
                 fake = gen(noise, labels)
                 prediction_real = disc(data, labels).view(-1)
-                prediction_fake = disc(fake, labels).view(-1)
+                prediction_fake = disc(fake.detach(), labels).view(-1)
                 loss_real = disc_loss(prediction_real, real_targets)
                 loss_fake = disc_loss(prediction_fake, fake_targets)
 

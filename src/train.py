@@ -207,7 +207,7 @@ def main():
             incep_score = 0.0
             incep_score_std = 0.0
             frechet_distance = 0.0
-            n_imgs_epoch = TEST_BATCH_SIZE // 20  # save around 5%(1/20) of TEST DATASET
+            n_imgs_epoch = TEST_BATCH_SIZE // 50  # save around 2%(1/50) of TEST DATASET
             n_imgs = (
                 N_TEST_DATA // TEST_BATCH_SIZE
             ) * n_imgs_epoch + N_TEST_DATA % TEST_BATCH_SIZE

@@ -20,6 +20,7 @@ import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
+
 os.environ["OMP_NUM_THREADS"] = "4"
 working_dir = Path(__file__).parent.parent.absolute()
 
@@ -132,6 +133,7 @@ def main():
     writer = SummaryWriter(EXPERIMENT_DIR)
     best_FID_IS_score = 0.0
 
+    # main loop
     for epoch in tqdm(range(EPOCHS)):
         gen.train()
         disc.train()
@@ -147,6 +149,7 @@ def main():
                     torch.ones(mini_batch_size).uniform_(0.7, 0.9).to(device)
                 )
 
+            # train discriminator
             batch_loss_disc = []
             for _ in range(DISC_ITERATIONS):
                 disc.zero_grad()
@@ -174,6 +177,7 @@ def main():
 
             epoch_loss_disc += np.mean(batch_loss_disc)
 
+            # train generator
             gen.zero_grad()
             noise = torch.randn(
                 mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
@@ -197,16 +201,13 @@ def main():
         writer.add_scalar("train_loss/discriminator", epoch_loss_disc, step)
         writer.add_scalar("train_loss/generator", epoch_loss_gen, step)
 
+        # testing
         if step % TEST_EVERY == 0:
             gen.eval()
             disc.eval()
-            epoch_loss_disc = 0.0
-            epoch_loss_gen = 0.0
-            accuracy_real = 0.0
-            accuracy_fake = 0.0
-            incep_score = 0.0
-            incep_score_std = 0.0
-            frechet_distance = 0.0
+            epoch_loss_disc, epoch_loss_gen = 0.0, 0.0
+            accuracy_real, accuracy_fake = 0.0, 0.0
+            incep_score, incep_score_std, frechet_distance = 0.0, 0.0, 0.0
             n_imgs_epoch = TEST_BATCH_SIZE // 50  # save around 2%(1/50) of TEST DATASET
             n_imgs = (
                 N_TEST_DATA // TEST_BATCH_SIZE
@@ -229,14 +230,16 @@ def main():
                 prediction_fake = disc(fake, labels).view(-1)
                 loss_real = disc_loss(prediction_real, real_targets)
                 loss_fake = disc_loss(prediction_fake, fake_targets)
+                loss_gen = gen_loss(prediction_fake, real_targets)
                 loss_disc = loss_real + loss_fake
                 epoch_loss_disc += loss_disc.item()
-                loss_gen = gen_loss(prediction_fake, real_targets)
                 epoch_loss_gen += loss_gen.item()
+
+                # save all generated images for the metrics
                 end_idx = min((idx + 1) * TEST_BATCH_SIZE, N_TEST_DATA)
                 all_fakes[idx * TEST_BATCH_SIZE : end_idx] = fake
 
-                # save random real/fake images
+                # save random real/fake images for human evaluation
                 start_idx = idx * n_imgs_epoch
                 n_imgs_epoch = min(n_imgs_epoch, mini_batch_size)
                 random_indexes = np.random.choice(
@@ -278,11 +281,12 @@ def main():
             grid_fake = torchvision.utils.make_grid(imgs_fake, nrow=16, normalize=True)
             writer.add_image("real", grid_real, step)
             writer.add_image("fake", grid_fake, step)
+            # save the current model if it is the best so far
             if frechet_distance / 10 + incep_score > best_FID_IS_score:
                 best_FID_IS_score = frechet_distance / 10 + incep_score
                 torch.save(gen.state_dict(), GEN_DIR.parent / Path("gen_best.pt"))
                 torch.save(disc.state_dict(), DISC_DIR.parent / Path("disc_best.pt"))
-
+        # save model
         if step % SAVE_EVERY == 0:
             torch.save(gen.state_dict(), GEN_DIR)
             torch.save(disc.state_dict(), DISC_DIR)

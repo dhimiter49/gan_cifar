@@ -131,7 +131,7 @@ def main():
     )
 
     writer = SummaryWriter(EXPERIMENT_DIR)
-    best_FID_IS_score = 0.0
+    best_FID_IS_score = -10000.0
 
     # main loop
     for epoch in tqdm(range(EPOCHS)):
@@ -283,8 +283,8 @@ def main():
             writer.add_image("real", grid_real, step)
             writer.add_image("fake", grid_fake, step)
             # save the current model if it is the best so far
-            if frechet_distance / 10 + incep_score > best_FID_IS_score:
-                best_FID_IS_score = frechet_distance / 10 + incep_score
+            if - frechet_distance / 10 + incep_score > best_FID_IS_score:
+                best_FID_IS_score = - frechet_distance / 10 + incep_score
                 torch.save(gen.state_dict(), GEN_DIR.parent / Path("gen_best.pt"))
                 torch.save(disc.state_dict(), DISC_DIR.parent / Path("disc_best.pt"))
         # save model

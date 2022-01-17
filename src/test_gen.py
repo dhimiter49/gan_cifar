@@ -78,10 +78,11 @@ def main():
     labels = labels[torch.randperm(len(labels))]
     input_loader = torch.utils.data.DataLoader(noise, batch_size=TEST_BATCH_SIZE)
     fake = torch.zeros(N_SAMPLES, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
-    for i, z in enumerate(tqdm(input_loader)):
-        start_idx = i * TEST_BATCH_SIZE
-        end_idx = min((i + 1) * TEST_BATCH_SIZE, N_SAMPLES)
-        fake[start_idx:end_idx] = gen(z, labels[start_idx:end_idx])
+    with torch.no_grad():
+        for i, z in enumerate(tqdm(input_loader)):
+            start_idx = i * TEST_BATCH_SIZE
+            end_idx = min((i + 1) * TEST_BATCH_SIZE, N_SAMPLES)
+            fake[start_idx:end_idx] = gen(z, labels[start_idx:end_idx])
     for i, img in enumerate(fake):
         img = img / 2 + 0.5
         save_image(

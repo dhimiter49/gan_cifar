@@ -258,14 +258,16 @@ class DCGAN_Generator_FC(nn.Module):
             ),
             normalizer.init(gen_features * 2, 16),
             nn.LeakyReLU(),
-            weight_norm(nn.ConvTranspose2d(
-                gen_features * 2,
-                channels_img,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            )),
+            weight_norm(
+                nn.ConvTranspose2d(
+                    gen_features * 2,
+                    channels_img,
+                    kernel_size=4,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                )
+            ),
             nn.Tanh(),
         ]
         self.model = nn.Sequential(*layers)
@@ -561,71 +563,85 @@ class DCGAN_Discriminator_Deeper(nn.Module):
         self.img_size = img_size
         normalizer = Normalizer(normalizers_list)
         layers = [
-            normalizer.init(channels_img + 1, 32, 0.2),
-            weight_norm(nn.Conv2d(
-                channels_img + 1,
-                disc_features * 6,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            )),
+            normalizer.init(channels_img + 1, img_size, 0.2),
+            weight_norm(
+                nn.Conv2d(
+                    channels_img + 1,
+                    disc_features * 6,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1,
+                    bias=False,
+                )
+            ),
             nn.LeakyReLU(0.2),
-            weight_norm(nn.Conv2d(
-                disc_features * 6,
-                disc_features * 6,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            )),
+            weight_norm(
+                nn.Conv2d(
+                    disc_features * 6,
+                    disc_features * 6,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1,
+                    bias=False,
+                )
+            ),
             nn.LeakyReLU(0.2),
-            weight_norm(nn.Conv2d(
-                disc_features * 6,
-                disc_features * 6,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                bias=False,
-            )),
+            weight_norm(
+                nn.Conv2d(
+                    disc_features * 6,
+                    disc_features * 6,
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                )
+            ),
             nn.LeakyReLU(0.2),
-            normalizer.init(disc_features * 6, 8, 0.5),
-            weight_norm(nn.Conv2d(
-                disc_features * 6,
-                disc_features * 12,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            )),
+            normalizer.init(disc_features * 6, 16, 0.5),
+            weight_norm(
+                nn.Conv2d(
+                    disc_features * 6,
+                    disc_features * 12,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1,
+                    bias=False,
+                )
+            ),
             nn.LeakyReLU(0.2),
-            weight_norm(nn.Conv2d(
-                disc_features * 12,
-                disc_features * 12,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            )),
+            weight_norm(
+                nn.Conv2d(
+                    disc_features * 12,
+                    disc_features * 12,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1,
+                    bias=False,
+                )
+            ),
             nn.LeakyReLU(0.2),
-            weight_norm(nn.Conv2d(
-                disc_features * 12,
-                disc_features * 12,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                bias=False,
-            )),
+            weight_norm(
+                nn.Conv2d(
+                    disc_features * 12,
+                    disc_features * 12,
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                )
+            ),
             nn.LeakyReLU(0.2),
-            normalizer.init(disc_features * 2, 8, 0.5),
-            weight_norm(nn.Conv2d(
-                disc_features * 12,
-                disc_features * 12,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                bias=False,
-            )),
+            normalizer.init(disc_features * 12, 8, 0.5),
+            weight_norm(
+                nn.Conv2d(
+                    disc_features * 12,
+                    disc_features * 12,
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                )
+            ),
             nn.LeakyReLU(0.2),
         ]
 

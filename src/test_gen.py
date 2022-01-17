@@ -93,8 +93,8 @@ def main():
     (incep_score, incep_score_std,), frechet_distance = get_inception_score_and_fid(
         fake / 2 + 0.5, working_dir / Path("dataset/cifar10_fid_stats.npz")
     )
-    print("Inception score: \t", incep_score)
-    print("Inception score: \t", incep_score_std)
+    print("Inception score: \t\t", incep_score)
+    print("Inception score: \t\t", incep_score_std)
     print("Frechet Inception distance: \t", frechet_distance)
 
 

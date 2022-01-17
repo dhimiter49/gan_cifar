@@ -74,7 +74,8 @@ def main():
     labels = [
         torch.zeros(n_img_per_class, dtype=torch.int) + i for i in range(NUM_CLASSES)
     ]
-    labels = torch.cat(labels).reshape(-1)
+    labels = torch.cat(labels).to(device)
+    labels = labels[torch.randperm(len(labels))]
     input_loader = torch.utils.data.DataLoader(noise, batch_size=TEST_BATCH_SIZE)
     fake = torch.zeros(N_SAMPLES, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
     for i, z in enumerate(tqdm(input_loader)):

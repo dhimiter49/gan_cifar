@@ -168,7 +168,7 @@ def main():
 
                 loss_disc = (loss_real + loss_fake) + LAMBDA_GP * gp
                 batch_loss_disc.append(loss_disc.item())
-                loss_disc.backward(retain_graph=True)
+                loss_disc.backward()
                 disc_optimizer.step()
 
                 if WEIGHT_CLIP != 0.0:

@@ -215,47 +215,48 @@ def main():
             imgs_fake = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             imgs_real = torch.zeros(n_imgs, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
             all_fakes = torch.zeros(N_TEST_DATA, CHANNELS_IMG, IMG_SIZE, IMG_SIZE)
-            for idx, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
-                data, labels = data.to(device), labels.to(device)
-                mini_batch_size = data.shape[0]
+            with torch.no_grad():
+                for i, (data, labels) in enumerate(tqdm(data_loader_test, leave=False)):
+                    data, labels = data.to(device), labels.to(device)
+                    mini_batch_size = data.shape[0]
 
-                real_targets = real_factor * torch.ones(mini_batch_size).to(device)
-                fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
+                    real_targets = real_factor * torch.ones(mini_batch_size).to(device)
+                    fake_targets = fake_factor * torch.ones(mini_batch_size).to(device)
 
-                noise = torch.randn(
-                    mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
-                ).to(device)
-                fake = gen(noise, labels)
-                prediction_real = disc(data, labels).view(-1)
-                prediction_fake = disc(fake, labels).view(-1)
-                loss_real = disc_loss(prediction_real, real_targets)
-                loss_fake = disc_loss(prediction_fake, fake_targets)
-                loss_gen = gen_loss(prediction_fake, real_targets)
-                loss_disc = loss_real + loss_fake
-                epoch_loss_disc += loss_disc.item()
-                epoch_loss_gen += loss_gen.item()
+                    noise = torch.randn(
+                        mini_batch_size, LATENT_DIM, LATENT_MATRIX, LATENT_MATRIX
+                    ).to(device)
+                    fake = gen(noise, labels)
+                    prediction_real = disc(data, labels).view(-1)
+                    prediction_fake = disc(fake, labels).view(-1)
+                    loss_real = disc_loss(prediction_real, real_targets)
+                    loss_fake = disc_loss(prediction_fake, fake_targets)
+                    loss_gen = gen_loss(prediction_fake, real_targets)
+                    loss_disc = loss_real + loss_fake
+                    epoch_loss_disc += loss_disc.item()
+                    epoch_loss_gen += loss_gen.item()
 
-                # save all generated images for the metrics
-                end_idx = min((idx + 1) * TEST_BATCH_SIZE, N_TEST_DATA)
-                all_fakes[idx * TEST_BATCH_SIZE : end_idx] = fake
+                    # save all generated images for the metrics
+                    end_idx = min((i + 1) * TEST_BATCH_SIZE, N_TEST_DATA)
+                    all_fakes[i * TEST_BATCH_SIZE : end_idx] = fake
 
-                # save random real/fake images for human evaluation
-                start_idx = idx * n_imgs_epoch
-                n_imgs_epoch = min(n_imgs_epoch, mini_batch_size)
-                random_indexes = np.random.choice(
-                    mini_batch_size, size=n_imgs_epoch, replace=False
-                )
-                end_idx = start_idx + n_imgs_epoch
-                imgs_real[start_idx:end_idx] = data[random_indexes]
-                imgs_fake[start_idx:end_idx] = fake[random_indexes]
+                    # save random real/fake images for human evaluation
+                    start_idx = i * n_imgs_epoch
+                    n_imgs_epoch = min(n_imgs_epoch, mini_batch_size)
+                    random_indexes = np.random.choice(
+                        mini_batch_size, size=n_imgs_epoch, replace=False
+                    )
+                    end_idx = start_idx + n_imgs_epoch
+                    imgs_real[start_idx:end_idx] = data[random_indexes]
+                    imgs_fake[start_idx:end_idx] = fake[random_indexes]
 
-                # accuracy
-                prediction_fake = prediction_fake >= 0.5
-                prediction_real = prediction_real >= 0.5
-                batch_correct_fake_pred = prediction_fake.eq(fake_targets).sum().item()
-                batch_correct_real_pred = prediction_real.eq(real_targets).sum().item()
-                accuracy_fake += batch_correct_fake_pred
-                accuracy_real += batch_correct_real_pred
+                    # accuracy
+                    prediction_fake = prediction_fake >= 0.5
+                    prediction_real = prediction_real >= 0.5
+                    batch_correct_fake = prediction_fake.eq(fake_targets).sum().item()
+                    batch_correct_real = prediction_real.eq(real_targets).sum().item()
+                    accuracy_fake += batch_correct_fake
+                    accuracy_real += batch_correct_real
 
             # inception score and frechet inception distance
             (

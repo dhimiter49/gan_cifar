@@ -117,11 +117,11 @@ def main():
 
     real_factor = 1
     fake_factor = 0
-    get_pred_targets = lambda x : x > 0.5  # maps a prediction to 0 and 1 targets
+    get_pred_targets = lambda x: x > 0.5  # maps a prediction to 0 and 1 targets
     if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
         real_factor = -1
         fake_factor = 1
-        get_pred_targets = lambda x : - 2 * (x < 0.0) + 1  # maps pred to -1, 1 targets
+        get_pred_targets = lambda x: -2 * (x < 0.0) + 1  # maps pred to -1, 1 targets
         initialize_weights(gen)
         initialize_weights(disc)
 
@@ -285,8 +285,8 @@ def main():
             writer.add_image("real", grid_real, step)
             writer.add_image("fake", grid_fake, step)
             # save the current model if it is the best so far
-            if - frechet_distance / 10 + incep_score > best_FID_IS_score:
-                best_FID_IS_score = - frechet_distance / 10 + incep_score
+            if -frechet_distance / 10 + incep_score > best_FID_IS_score:
+                best_FID_IS_score = -frechet_distance / 10 + incep_score
                 torch.save(gen.state_dict(), GEN_DIR.parent / Path("gen_best.pt"))
                 torch.save(disc.state_dict(), DISC_DIR.parent / Path("disc_best.pt"))
         # save model

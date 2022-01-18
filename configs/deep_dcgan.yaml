@@ -28,5 +28,5 @@ training:
     disc_iterations: 1
     weight_clip: 0.0
     lambda_gp: 0
-    gen_loss: BCELoss
+    gen_loss: FeatureMatchingLoss
     disc_loss: BCELoss

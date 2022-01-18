@@ -4,9 +4,9 @@ dataset:
     num_classes: 10
 
 nets:
-    # Generator: DCGAN_Generator, DCGAN_4x4_Generator, DCGAN_4x4_Generator_Conv
+    # Generator: DCGAN_Generator, DCGAN_4x4_Generator, DCGAN_4x4_Generator_Conv, DCGAN_Generator_FC
     generator_model: DCGAN_Generator
-    # Discriminator: DCGAN_Discriminator, DCGAN_Discriminator_FC,  WGAN_Discriminator, WGAN_Spectral_Discriminator,
+    # Discriminator: DCGAN_Discriminator, DCGAN_Discriminator_FC,  WGAN_Discriminator, WGAN_Spectral_Discriminator, DCGAN_Discriminator_Deeper
     discriminator_model: DCGAN_Discriminator
     disc_features: 16
     gen_features: 16

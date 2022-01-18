@@ -1,0 +1,32 @@
+dataset:
+    img_size: 32
+    channels_img: 3
+    num_classes: 10
+
+nets:
+    generator_model: DCGAN_Generator_FC
+    discriminator_model: DCGAN_Discriminator_Deeper
+    disc_features: 16
+    gen_features: 64
+    latent_dim: 128
+    embedding_dim: 16
+    disc_normalizers:
+        - Dropout
+    gen_normalizers:
+        - BatchNorm2d
+
+training:
+    batch_size: 128
+    test_batch_size: 1000
+    test_every: 10
+    save_every: 50
+    epochs: 1000
+    gen_lr: 0.0001
+    disc_lr: 0.0002
+    cuda: True
+    seed: 0
+    disc_iterations: 1
+    weight_clip: 0.0
+    lambda_gp: 0
+    gen_loss: BCELoss
+    disc_loss: BCELoss

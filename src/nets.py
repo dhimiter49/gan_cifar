@@ -351,6 +351,85 @@ class DCGAN_Discriminator(nn.Module):
         return self.prediction(features)
 
 
+class DCGAN_Spectral_Discriminator(nn.Module):
+    def __init__(
+        self,
+        channels_img,
+        disc_features,
+        num_classes,
+        img_size,
+        normalizers_list,
+    ):
+        super().__init__()
+        self.img_size = img_size
+        normalizer = Normalizer(normalizers_list)
+        layers = [
+            spectral_norm(
+                nn.Conv2d(
+                    channels_img + 1,
+                    disc_features,
+                    kernel_size=4,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                )
+            ),
+            nn.LeakyReLU(0.2),
+            spectral_norm(
+                nn.Conv2d(
+                    disc_features,
+                    disc_features * 2,
+                    kernel_size=4,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                )
+            ),
+            normalizer.init(disc_features * 2, 8),
+            nn.LeakyReLU(0.2),
+            spectral_norm(
+                nn.Conv2d(
+                    disc_features * 2,
+                    disc_features * 4,
+                    kernel_size=4,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                )
+            ),
+            normalizer.init(disc_features * 4, 4),
+        ]
+
+        prediction_layers = [
+            nn.LeakyReLU(0.2),
+            spectral_norm(
+                nn.Conv2d(
+                    disc_features * 4,
+                    1,
+                    kernel_size=4,
+                    stride=1,
+                    padding=0,
+                    bias=False,
+                )
+            ),
+            nn.Sigmoid(),
+        ]
+
+        self.model = nn.Sequential(*layers)
+        self.prediction = nn.Sequential(*prediction_layers)
+        self.embed = nn.Embedding(num_classes, img_size * img_size)
+
+    def forward(self, noise, labels, feat_matching=False):
+        embedding = self.embed(labels).view(
+            labels.shape[0], 1, self.img_size, self.img_size
+        )
+        noise = torch.cat([noise, embedding], dim=1)
+        features = self.model(noise)
+        if feat_matching:
+            return features
+        return self.prediction(features)
+
+
 class WGAN_Discriminator(nn.Module):
     def __init__(
         self,

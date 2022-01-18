@@ -88,10 +88,10 @@ Files already downloaded and verified
 Files already downloaded and verified
   0%|██                                                                            | 25/1000 [00:00<?, ?it/s]
   0%|████████████                                                                  | 55/391  [00:00<?, ?it/s]
-# The progress over the epochs and the current training or testing epoch will be shown
+# The progress over the epochs and the current training or testing will be shown
 # If the dataset is not downloaded it will be under the dataset/ directory
 
-# To check the experiment results use tensorboard
+# To check the experiment results use Tensorboard
 tensorboard --logdir /path_to_repo/gan_cifar/experiment/dcgan/Tue_Jan_18_12_11_26_2022
 
 # To test the generative model again use test_gen.py
@@ -99,7 +99,7 @@ python src/test_gen.py /path_to_repo/gan_cifar/models/dcgan/Tue_Jan_18_12_11_26_
 ```
 
 ### Performance results
-Due to time and hardware constraints we have not yet tested on multiple seeds for each training/model configuration. Below are the best FID and IS scores\* achieved while testing. Some of the instances have been trained with older versions of our code.
+Due to time and hardware constraints we have not yet tested on multiple seeds for each training/model configuration. Below are the best FID and IS scores\* achieved while testing for differently initialized on model, features<sup>‡</sup> and normalization. Some of the instances have been trained with older versions of our code.
 
 - The DCGAN(corresponds to `configs/dcgan.yaml`) uses a generator and discriminator with 4 hidden layers and hidden features specified by the number beside the name.
 - The WGAN(corresponds to `configd/wgan_gp.yaml`) uses a generator and discriminator with 4 hidden layers and hidden features specified by the number besides the name. We use gradient penalty as proposed [here](https://arxiv.org/pdf/1706.08500)(instead of clipping, see also [improvements on WGANs](https://arxiv.org/pdf/1704.00028)) and apply spectral norm as a default.
@@ -108,15 +108,16 @@ Due to time and hardware constraints we have not yet tested on multiple seeds fo
 |  Models & Training \ Metrics      | FID(TEST 10k) |     IS       |
 | :----                             | :----:        |     :----:   |
 | DCGAN64<sup>†</sup>               |    39.94      |  6.56±0.15   |
-| DCGAN128                          |    41.82      |  6.50±0.11   |
+| DCGAN128                          |    39.82      |  6.58±0.14   |
 | DCGAN64_Batch_Dropout             |    52.15      |  6.23±0.17   |
 | WGAN64_Instance<sup>†</sup>       |    46.36      |  6.17±0.14   |
 | WGAN64_Layer                      |    49.21      |  5.90±0.13   |
-| WGAN64_Batch                      |    77.05      |  4.95±0.15   |
+| WGAN64_Batch                      |    66.59      |  5.44±0.15   |
 | WGAN96_Instance                   |    63.32      |  5.28±0.11   |
 | DEEPER_DCGAN16_BCELoss            |    44.97      |  5.87±0.15   |
 | DEEPER_DCGAN64_BCELoss            |    65.22      |  5.39±0.11   |
-| DEEPER_DCGAN46                    |    81.72      |  4.43±0.07   |
+| DEEPER_DCGAN16                    |    74.04      |  5.30±0.10   |
 
 <sub>_*For FID, lower is better. For IS, higher is better._</sub><br>
-<sub>_<sup>†</sup>Reproduced result over more then one instance._
+<sub>_<sup>†</sup>Reproduced result over more then one instance._</sub><br>
+<sub>_<sup>‡</sup>The number of features is multiplied in each layer of the module._

@@ -375,7 +375,7 @@ class DCGAN_Spectral_Discriminator(nn.Module):
                 )
             ),
             nn.LeakyReLU(0.2),
-            spectral_norm(  
+            spectral_norm(
                 nn.Conv2d(
                     disc_features,
                     disc_features * 2,

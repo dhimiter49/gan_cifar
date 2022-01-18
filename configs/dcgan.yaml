@@ -5,7 +5,7 @@ dataset:
 
 nets:
     generator_model: DCGAN_Generator
-    discriminator_model: DCGAN_Discriminator
+    discriminator_model: DCGAN_Spectral_Discriminator
     disc_features: 32
     gen_features: 32
     latent_dim: 128

@@ -1,6 +1,6 @@
 # Generating data using GAN on CIFAR-10 dataset
 
-In this project we use the latest conditional GAN models to learn to generate images using the CIFAR-10 dataset. This dataset includes 10 classes:
+In this project we use conditional GAN(DCGAN) models to learn to generate images using the CIFAR-10 dataset. This dataset includes 10 classes:
 
 - airplane
 - automobile
@@ -34,7 +34,7 @@ To set up our environment we use Anaconda. You can use one of two methods below.
     pip install -r requirements.txt
     ```
 
-- Alternatively you can create a conda environment with the name gan(can be changed manually in the variable name inside the `.yml` file) and install all necessary packages using the defined `environment.yml` file:
+- Alternatively, you can create a conda environment with the name gan(can be changed manually in the variable name inside the `.yml` file) and install all necessary packages using the defined `environment.yml` file:
     ```
     conda env create --file environment.yml
     ```
@@ -57,11 +57,11 @@ Testing will be carried out at specific intervals set in the configuration. Duri
 ```
 python -m pytorch_gan_metrics.calc_fid_stats --path dataset/cifar10_images --output dataset/cifar10_fid_stats.npz
 ```
-This will create a `.npz` file where the necessary data to calculate FID will be stored. The FID stats are created only using test data as this is a more fair way to compare the generator to images that have not been used during training. Using the training data would almost definitely result in a slightly higher FID.
+This will create a `.npz` file where the necessary data to calculate FID will be stored. The FID stats are created only using test data as this is a more fair way to compare the generator to images that have not been used during training. Using the training data would almost definitely result in a slightly better FID.
 
 We have also implemented a separate program for testing,
 ```
-test_gen.py gnerator_path.pt config_path num_samples num_images
+test_gen.py gnerator_path.pt config_path.yaml num_samples num_images
 ```
 which generates, saves and evaluates images. You need to pass as arguments the path to a generator model and its corresponding configuration file. There is also the optional argument of passing the number of samples which is set by default to 1000. To get a fair evaluation for FID and IS scores you need to use at least 10000 samples. You can also pass the number of images you want to save which will be equally divided into the 10 possible classes, the default value is set to 100.
 
@@ -99,3 +99,19 @@ python src/test_gen.py /path_to_repo/gan_cifar/models/dcgan/Tue_Jan_18_12_11_26_
 ```
 
 ### Performance results
+Due to time and hardware constraints we have not yet tested on multiple seeds for each training/model configuration. Below are the best FID and IS scores\* achieved while testing. Some of the instances have been trained with older version of our code.
+
+|  Models & Training \ Metrics      | FID(TEST 10k) |     IS       |
+| :----                             | :----:        |     :----:   |
+| DCGAN64                           |    39.94      |  6.56±0.15   |
+| DCGAN128                          |    43.18      |  6.39±0.14   |
+| DCGAN64_Batch_Dropout             |    52.15      |  6.23±0.17   |
+| WGAN64_Instance                   |    46.36      |  6.17±0.14   |
+| WGAN64_Layer                      |    49.21      |  5.90±0.13   |
+| WGAN64_Batch                      |    77.05      |  4.95±0.15   |
+| WGAN96_Instance                   |    63.32      |  5.28±0.11   |
+| DEEPER_DCGAN16                    |    44.97      |  5.87±0.15   |
+| DEEPER_DCGAN64                    |    65.22      |  5.39±0.11   |
+| DEEPER_DCGAN46_Feat_Mat           |    81.72      |  4.43±0.07   |
+
+<sub>_*For FID, lower is better. For IS, higher is better._

@@ -122,8 +122,9 @@ def main():
         real_factor = -1
         fake_factor = 1
         get_pred_targets = lambda x : - 2 * (x < 0.0) + 1  # maps pred to -1, 1 targets
-        initialize_weights(gen)
-        initialize_weights(disc)
+    
+    initialize_weights(gen)
+    initialize_weights(disc)
 
     feature_matching = True if GEN_LOSS_STR == "FeatureMatchingLoss" else False
 

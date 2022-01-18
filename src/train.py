@@ -117,9 +117,11 @@ def main():
 
     real_factor = 1
     fake_factor = 0
+    get_pred_targets = lambda x : x > 0.5  # maps a prediction to 0 and 1 targets
     if GEN_LOSS_STR == "WassersteinLoss" and DISC_LOSS_STR == "WassersteinLoss":
         real_factor = -1
         fake_factor = 1
+        get_pred_targets = lambda x : - 2 * (x < 0.0) + 1  # maps pred to -1, 1 targets
         initialize_weights(gen)
         initialize_weights(disc)
 
@@ -251,8 +253,8 @@ def main():
                     imgs_fake[start_idx:end_idx] = fake[random_indexes]
 
                     # accuracy
-                    prediction_fake = prediction_fake >= 0.5
-                    prediction_real = prediction_real >= 0.5
+                    prediction_fake = get_pred_targets(prediction_fake)
+                    prediction_real = get_pred_targets(prediction_real)
                     batch_correct_fake = prediction_fake.eq(fake_targets).sum().item()
                     batch_correct_real = prediction_real.eq(real_targets).sum().item()
                     accuracy_fake += batch_correct_fake

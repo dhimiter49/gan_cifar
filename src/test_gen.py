@@ -95,7 +95,7 @@ def main():
         fake / 2 + 0.5, working_dir / Path("dataset/cifar10_fid_stats.npz")
     )
     print("Inception score: \t\t", incep_score)
-    print("Inception score: \t\t", incep_score_std)
+    print("Inception score std: \t\t", incep_score_std)
     print("Frechet Inception distance: \t", frechet_distance)
 
 

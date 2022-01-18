@@ -118,5 +118,5 @@ Due to time and hardware constraints we have not yet tested on multiple seeds fo
 | DEEPER_DCGAN64_BCELoss            |    65.22      |  5.39±0.11   |
 | DEEPER_DCGAN46                    |    81.72      |  4.43±0.07   |
 
-<sub>_*For FID, lower is better. For IS, higher is better._<br>
+<sub>_*For FID, lower is better. For IS, higher is better._</sub><br>
 <sub>_<sup>†</sup>Reproduced result over more then one instance._

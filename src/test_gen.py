@@ -14,7 +14,7 @@ import nets
 
 
 working_dir = Path(__file__).parent.parent.absolute()
-experiments_dir = Path()  # set this paths after reading the config file
+experiments_dir = Path()  # set the path after reading the config file
 str_labels = [
     "airplane",
     "automobile",
@@ -33,6 +33,7 @@ def main():
     (
         PATH_MODEL,
         N_SAMPLES,
+        N_IMGS,
         IMG_SIZE,
         CHANNELS_IMG,
         NUM_CLASSES,
@@ -45,6 +46,7 @@ def main():
         CUDA,
     ) = read_config(sys.argv)
 
+    N_SAMPLES = max(N_SAMPLES, N_IMGS)
     Path(experiments_dir).mkdir(parents=True, exist_ok=True)
     print("Saving generated images under: \t", experiments_dir)
 
@@ -84,6 +86,8 @@ def main():
             end_idx = min((i + 1) * TEST_BATCH_SIZE, N_SAMPLES)
             fake[start_idx:end_idx] = gen(z, labels[start_idx:end_idx])
     for i, img in enumerate(fake):
+        if i >= N_IMGS:
+            break
         img = img / 2 + 0.5
         save_image(
             img,
@@ -103,6 +107,7 @@ def read_config(_input):
     path_model = working_dir / Path(_input[1])
     path_config = working_dir / Path(_input[2])
     n_samples = int(_input[3]) if len(_input) >= 4 else 1000
+    n_imgs = int(_input[4]) if len(_input) >= 5 else 100
 
     try:
         with open(path_config) as yamlfile:
@@ -150,7 +155,7 @@ def read_config(_input):
         sys.exit(1)
 
     return (
-        [path_model, n_samples]
+        [path_model, n_samples, n_imgs]
         + config_dataset
         + config_model
         + [test_batch_size, cuda]

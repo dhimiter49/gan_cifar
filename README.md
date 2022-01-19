@@ -47,7 +47,7 @@ black file.py
 mypy file.py
 ```
 
-<sub>_*Not fully implemented through the code._
+<sub>_*Not fully implemented throughout the code._
 
 ## Training
 To start a training instance run the `src/train.py` program with the path to a valid(see `configs/default.yaml`) `.yaml` configuration file. If no such path is specified then the program will look for a `default.yaml` file under the `configs/` directory. If the configuration file is read correctly then a directory will be created to save the progress of the training using Tensorboard and `.pt` files will be created to save the generator and discriminator. The first will be saved under `experiments/config_name/current_time_key/` and the latter under `models/config_name/current_time_key/gen_or_disc.pt`. Furthermore, we also save the configuration file used to initialize the training under the `experiments/config_name/current_time_key/`, which comes in handy if small changes are made to the configuration before starting training. During training the loss values are tracked for both generator and discriminator on each epoch. The last condition to train the models properly is to create the statistics for the dataset in order to calculate the Frechet Inception distance(FID) which is explained in the next paragraph.
@@ -99,7 +99,7 @@ python src/test_gen.py /path_to_repo/gan_cifar/models/dcgan/Tue_Jan_18_12_11_26_
 ```
 
 ### Performance results
-Due to time and hardware constraints we have not yet tested on multiple seeds for each training/model configuration. Below are the best FID and IS scores\* achieved while testing for differently initialized on model, features<sup>‡</sup> and normalization. Some of the instances have been trained with older versions of our code.
+Due to time and hardware constraints we have not yet tested on multiple seeds for each training/model configuration. Below are the best FID and IS scores\* achieved while testing for different initializations of model, features<sup>‡</sup> and normalization. Some of the instances have been trained with older versions of our code.
 
 - The DCGAN(corresponds to `configs/dcgan.yaml`) uses a generator and discriminator with 4 hidden layers and hidden features specified by the number beside the name.
 - The WGAN(corresponds to `configd/wgan_gp.yaml`) uses a generator and discriminator with 4 hidden layers and hidden features specified by the number besides the name. We use gradient penalty as proposed [here](https://arxiv.org/pdf/1706.08500)(instead of clipping, see also [improvements on WGANs](https://arxiv.org/pdf/1704.00028)) and apply spectral norm as a default.
@@ -111,8 +111,9 @@ Due to time and hardware constraints we have not yet tested on multiple seeds fo
 | DCGAN128                          |    39.82      |  6.58±0.14   |
 | DCGAN64_Batch_Dropout             |    52.15      |  6.23±0.17   |
 | WGAN64_Instance<sup>†</sup>       |    46.36      |  6.17±0.14   |
+| WGAN64_Instance                   |    33.95      |  7.07±0.20   |
 | WGAN64_Layer                      |    49.21      |  5.90±0.13   |
-| WGAN64_Batch                      |    66.59      |  5.44±0.15   |
+| WGAN64_Batch                      |    49.82      |  6.00±0.20   |
 | WGAN96_Instance                   |    63.32      |  5.28±0.11   |
 | DEEPER_DCGAN16_BCELoss            |    44.97      |  5.87±0.15   |
 | DEEPER_DCGAN64_BCELoss            |    65.22      |  5.39±0.11   |

@@ -21,8 +21,8 @@ training:
     test_every: 10
     save_every: 50
     epochs: 1000
-    gen_lr: 0.0001
-    disc_lr: 0.0002
+    gen_lr: 0.00002
+    disc_lr: 0.00003
     cuda: True
     seed: 0
     disc_iterations: 5

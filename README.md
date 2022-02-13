@@ -69,7 +69,7 @@ which generates, saves and evaluates images. You need to pass as arguments the p
 To run an experiment you can either use one of the existing configuration under the `configs/` folder or create your own. To help define a configuration you can use `default.yaml` configuration as template, where all possible options for each parameter are written. The default configuration trains a general conditional GAN. The `dcgan.yaml` configuration has been optimized for our task of interest, CIFAR10. The `wgan.yaml` and `wgan_gp.yaml` configuration both train a conditional Wasserstein GAN. The first applies clipping to the parameters of the discriminator whereas the second calculates a gradient penalty like proposed in this [paper](https://arxiv.org/pdf/1706.08500). Finally, the `deep_dcgan.yaml` uses feature matching loss and architectures developed based on this [work](https://arxiv.org/abs/1606.03498).
 
 ## Example and results
-To run an experiment after setting up the environment, make also sure to have created the stats for the FID score.
+To run an experiment after setting up the environment, make also sure to have created the stats for the FID score. For this to work you also need to have the CIFAR10 dataset installed under `dataset/cifar10_images`. To download the dataset and save it under the appropriate folder you can run `python src/train.py` and stop the program after the dataset has finished downloading otherwise it will return an error during testing since the stats will not have been created yet.
 ```
 # create folder with all test images under dataset/cifar10-images/
 python save_cifar10_imgs.py

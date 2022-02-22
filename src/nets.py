@@ -321,9 +321,6 @@ class DCGAN_Discriminator(nn.Module):
                 bias=False,
             ),
             normalizer.init(disc_features * 4, 4),
-        ]
-
-        prediction_layers = [
             nn.LeakyReLU(0.2),
             nn.Conv2d(
                 disc_features * 4,
@@ -333,6 +330,8 @@ class DCGAN_Discriminator(nn.Module):
                 padding=0,
                 bias=False,
             ),
+        ]
+        prediction_layers = [
             nn.Sigmoid(),
         ]
 
@@ -398,9 +397,6 @@ class DCGAN_Spectral_Discriminator(nn.Module):
                 )
             ),
             normalizer.init(disc_features * 4, 4),
-        ]
-
-        prediction_layers = [
             nn.LeakyReLU(0.2),
             spectral_norm(
                 nn.Conv2d(
@@ -412,6 +408,9 @@ class DCGAN_Spectral_Discriminator(nn.Module):
                     bias=False,
                 )
             ),
+        ]
+
+        prediction_layers = [
             nn.Sigmoid(),
         ]
 
@@ -624,7 +623,6 @@ class DCGAN_Discriminator_FC(nn.Module):
         noise = torch.cat([noise, embedding], dim=1)
         features = self.model(noise)
         if feat_matching:
-            print(features.shape)
             return features
         return self.prediction(features)
 
@@ -722,9 +720,6 @@ class DCGAN_Discriminator_Deeper(nn.Module):
                 )
             ),
             nn.LeakyReLU(0.2),
-        ]
-
-        prediction_layers = [
             nn.Conv2d(
                 disc_features * 12,
                 1,
@@ -733,6 +728,9 @@ class DCGAN_Discriminator_Deeper(nn.Module):
                 padding=0,
                 bias=False,
             ),
+        ]
+
+        prediction_layers = [
             nn.Sigmoid(),
         ]
 

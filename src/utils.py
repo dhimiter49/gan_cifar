@@ -139,7 +139,7 @@ def read_config(_input):
         assert type(seed) == int
         assert type(disc_iterations) == int
         assert type(weight_clip) == float
-        assert type(lambda_gp) == int
+        assert type(lambda_gp) == int or type(lambda_gp) == float
         assert type(gen_loss) == str
         assert type(disc_loss) == str
     except (AssertionError, ValueError, KeyError) as e:

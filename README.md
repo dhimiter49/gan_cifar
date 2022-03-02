@@ -108,16 +108,17 @@ Due to time and hardware constraints we have not yet tested on multiple seeds fo
 |  Models & Training \ Metrics      | FID(TEST 10k) |     IS       |
 | :----                             | :----:        |     :----:   |
 | DCGAN64<sup>†</sup>               |    39.94      |  6.56±0.15   |
-| DCGAN128                          |    39.82      |  6.58±0.14   |
+| DCGAN128<sup>†</sup>              |    37.99      |  6.59±0.15   |
 | DCGAN64_Batch_Dropout             |    52.15      |  6.23±0.17   |
-| WGAN64_Instance<sup>†</sup>       |    46.36      |  6.17±0.14   |
-| WGAN64_Instance                   |    33.95      |  7.07±0.20   |
+| DCGAN96_Feature<sup>†</sup>       |    37.85      |  7.00±0.19   |
+| DCGAN64_ExpSigmoid                |    42.89      |  6.43±0.18   |
+| WGAN64_Instance<sup>†</sup>       |    33.95      |  7.07±0.20   |
+| WGAN96_Instance<sup>†</sup>       |    30.20      |  7.41±0.20   |
+| WGAN128_Instance<sup>†</sup>      |    29.57      |  7.19±0.15   |
 | WGAN64_Layer                      |    49.21      |  5.90±0.13   |
 | WGAN64_Batch                      |    49.82      |  6.00±0.20   |
-| WGAN96_Instance                   |    63.32      |  5.28±0.11   |
-| DEEPER_DCGAN16_BCELoss            |    44.97      |  5.87±0.15   |
-| DEEPER_DCGAN64_BCELoss            |    65.22      |  5.39±0.11   |
-| DEEPER_DCGAN16                    |    74.04      |  5.30±0.10   |
+| DEEPER_DCGAN16_Dropout            |    45.03      |  5.87±0.15   |
+| DEEPER_DCGAN64_Feature<sup>†</sup>|    35.80      |  6.64±0.17   |
 
 <sub>_*For FID, lower is better. For IS, higher is better._</sub><br>
 <sub>_<sup>†</sup>Reproduced result over more then one instance._</sub><br>
